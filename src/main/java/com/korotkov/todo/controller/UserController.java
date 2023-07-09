@@ -1,14 +1,22 @@
 package com.korotkov.todo.controller;
 
 
-import com.korotkov.todo.dto.TodoDTO;
-import com.korotkov.todo.dto.UserDTO;
+import com.korotkov.todo.dto.response.UserResponse;
+import com.korotkov.todo.dto.response.TodoResponse;
+import com.korotkov.todo.dto.request.TodoRequest;
+import com.korotkov.todo.dto.response.LoginResponse;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.service.TodoService;
 import com.korotkov.todo.service.UserService;
+import com.korotkov.todo.util.TodoErrorResponse;
+import com.korotkov.todo.util.TodoNotCreatedException;
+import com.korotkov.todo.util.TodoNotFoundException;
+import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,38 +39,68 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public List<UserDTO> getUsers(){
-        return userService.getListOfUsers().stream().
-                map(user -> modelMapper.map(user, UserDTO.class))
-                .collect(Collectors.toList());
+    public ResponseEntity<List<LoginResponse>> getUsers(){
+        return new ResponseEntity<>(userService.getListOfUsers().stream().
+                map(user -> modelMapper.map(user, LoginResponse.class))
+                .collect(Collectors.toList()),HttpStatus.OK);
+    }
+
+    @GetMapping("/admin")
+    public String getAdminMessage(){
+        return "I'm admin";
     }
 
     @GetMapping("/me")
-    public UserDTO getInfo(){
+    public LoginResponse getInfo(){
         System.out.println("ПРОШЕЛ");
-        return modelMapper.map(userService.getCurrentUser(), UserDTO.class);
+        return modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
     }
 
     @GetMapping("/todos")
-    public List<TodoDTO> getTodos(){
-        System.out.println("123");
-        List<Todo> todos = userService.getTodos(userService.getCurrentUser());
-        return todos.stream().
-                map(todo -> modelMapper.map(todo, TodoDTO.class))
-                .collect(Collectors.toList());
+    public ResponseEntity<List<TodoResponse>> getTodos(){
+        List<Todo> todos = todoService.getAll();
+        return new ResponseEntity<>(todos.stream().
+                map(this::getTodoResponse)
+                .collect(Collectors.toList()),HttpStatus.OK);
     }
 
     @PostMapping("/todos")
-    public HttpStatus createTodo(@RequestBody TodoDTO todoDTO){
-        Todo todo = modelMapper.map(todoDTO, Todo.class);
+    public ResponseEntity<TodoResponse> createTodo(@RequestBody @Valid TodoRequest todoRequest,
+                                                   BindingResult bindingResult){
+        if(bindingResult.hasErrors()){
+            throw new TodoNotCreatedException(bindingResult.getFieldError().getField() + " is empty");
+        }
+
+        Todo todo = modelMapper.map(todoRequest, Todo.class);
         todo.setCreatedBy(userService.getCurrentUser());
         todoService.save(todo);
-        return HttpStatus.OK;
+        return new ResponseEntity<>(getTodoResponse(todo),HttpStatus.valueOf(201)) ;
     }
 
-    @GetMapping("/todo/{id}")
-    public TodoDTO getTodo(@PathVariable int id){
-        return modelMapper.map(todoService.getById(id),TodoDTO.class);
+    @GetMapping("/todos/{id}")
+    public ResponseEntity<TodoResponse> getTodo(@PathVariable int id){
+        return new ResponseEntity<>(getTodoResponse(todoService.getById(id)),HttpStatus.valueOf(200));
+    }
+
+    @PutMapping("/todos/{id}")
+    public HttpStatus updateTodo(@RequestBody @Valid TodoRequest todoRequest, BindingResult bindingResult, @PathVariable int id){
+        if(bindingResult.hasErrors()){
+            throw new TodoNotCreatedException(bindingResult.getFieldError().getField());
+        }
+        todoService.update(modelMapper.map(todoRequest,Todo.class ),id, userService.getCurrentUser());
+        return HttpStatus.NO_CONTENT;
+    }
+    @DeleteMapping("/todos/{id}")
+    public HttpStatus deleteTodo(@PathVariable int id) {
+        todoService.delete(id);
+        return HttpStatus.NO_CONTENT;
+    }
+
+
+    private TodoResponse getTodoResponse(Todo todo) {
+        TodoResponse newTodo = modelMapper.map(todo, TodoResponse.class);
+        newTodo.setCreator(modelMapper.map(todo.getCreatedBy(), UserResponse.class));
+        return newTodo;
     }
 
 
@@ -70,6 +108,18 @@ public class UserController {
     public String test(){
         System.out.println("ДОШЛО");
         return "test message";
+    }
+
+
+    @ExceptionHandler
+    private ResponseEntity<HttpStatus> handleException(TodoNotFoundException e){
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler
+    private ResponseEntity<TodoErrorResponse> handleException(TodoNotCreatedException e)
+    {
+        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
+        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
     }
 
 //    private User getCurrentUser(){}

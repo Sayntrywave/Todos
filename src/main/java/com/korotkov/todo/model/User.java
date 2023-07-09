@@ -19,28 +19,34 @@ public class User {
     @Column(name = "id")
     private int id;
 
+
     @Column(name = "name")
     private String name;
 
-    @Column(name = "username")
-    private String username;
+    @Column(name = "login")
+    private String login;
 
     @Column(name = "password")
     private String password;
+
+    @Column(name = "role")
+    private String role;
 
     @OneToMany(mappedBy = "createdBy")
     private List<Todo> todos;
 
 
-    public User(String name, String username, String password) {
+    public User(String name, String login, String password, String role) {
         this.name = name;
-        this.username = username;
+        this.login = login;
         this.password = password;
+        this.role = role;
     }
 
-    public User(String username, String password) {
-        this.username = username;
+    public User(String login, String password, String role) {
+        this.login = login;
         this.password = password;
+        this.role = role;
     }
 
     public void setTodo(Todo todo){
@@ -49,5 +55,6 @@ public class User {
         }
         todos.add(todo);
     }
+
 
 }

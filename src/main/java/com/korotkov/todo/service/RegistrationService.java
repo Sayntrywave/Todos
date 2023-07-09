@@ -23,7 +23,11 @@ public class RegistrationService {
 
     @Transactional
     public void register(User user){
+        //todo check unique
+//        if(repository.existsByLogin())
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("ROLE_USER");
         repository.save(user);
+
     }
 }

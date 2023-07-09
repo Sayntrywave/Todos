@@ -1,7 +1,6 @@
 package com.korotkov.todo.model;
 
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,5 +34,12 @@ public class Todo {
         this.title = title;
         this.description = description;
         this.createdBy = createdBy;
+    }
+
+    @Override
+    public String toString() {
+        return "Todo{" +
+                "title='" + title + '\'' +
+                '}';
     }
 }
