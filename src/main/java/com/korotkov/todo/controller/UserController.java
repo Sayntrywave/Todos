@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:4000","https://localhost:4000"},allowCredentials = "true")
+@CrossOrigin()
 public class UserController {
 
     private final UserService userService;

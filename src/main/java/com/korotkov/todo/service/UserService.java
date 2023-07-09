@@ -38,6 +38,11 @@ public class UserService {
         throw new UserNotFoundException();
     }
 
+
+    public User findByLogin(String login){
+        return userRepository.findUserByLogin(login).orElseThrow(UserNotFoundException::new);
+    }
+
     public User getCurrentUser() {
         //todo edit this
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

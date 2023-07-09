@@ -42,20 +42,14 @@ public class SecurityConfig {
                                  (request, response, authException) ->
                                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage())
                         ))
-//                .authenticationEntryPoint((response, request, authException) -> {
-//                    request.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-//                })
-//                .and()
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/login","/register","/test","/error").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/admin","/users").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        //todo add roles
         return http.build();
     }
 
