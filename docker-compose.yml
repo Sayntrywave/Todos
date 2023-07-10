@@ -1,6 +1,6 @@
 services:
   app:
-    image: todo-app
+    image: syantrywave/todo-app:1.0.1
     restart: always
     depends_on:
       - todo_db

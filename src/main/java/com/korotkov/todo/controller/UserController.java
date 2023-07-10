@@ -14,6 +14,7 @@ import com.korotkov.todo.util.TodoNotFoundException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@CrossOrigin()
+@CrossOrigin
 public class UserController {
 
     private final UserService userService;
@@ -38,17 +39,9 @@ public class UserController {
         this.modelMapper = modelMapper;
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<LoginResponse>> getUsers(){
-        return new ResponseEntity<>(userService.getListOfUsers().stream().
-                map(user -> modelMapper.map(user, LoginResponse.class))
-                .collect(Collectors.toList()),HttpStatus.OK);
-    }
 
-    @GetMapping("/admin")
-    public String getAdminMessage(){
-        return "I'm admin";
-    }
+
+
 
     @GetMapping("/me")
     public LoginResponse getInfo(){
@@ -83,7 +76,14 @@ public class UserController {
     }
 
     @PutMapping("/todos/{id}")
-    public HttpStatus updateTodo(@RequestBody @Valid TodoRequest todoRequest, BindingResult bindingResult, @PathVariable int id){
+    public HttpStatus updateTodo(@RequestBody @Valid TodoRequest todoRequest,
+                                 BindingResult bindingResult,
+                                 @PathVariable int id){
+//,
+//                                 @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+//        System.out.println(token);
+        // login password -> db
+        //
         if(bindingResult.hasErrors()){
             throw new TodoNotCreatedException(bindingResult.getFieldError().getField());
         }

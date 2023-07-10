@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@CrossOrigin()
+@CrossOrigin
 @RestController
 public class AuthController {
     private final RegistrationService registrationService;
@@ -45,17 +45,27 @@ public class AuthController {
         return "Hello";
     }
 
-    // TODO на регистрацию добавить валидацию
     @PostMapping("/register")
-    public HttpStatus registration(@RequestBody User user){
-        registrationService.register(user);
-        return HttpStatus.OK;
+    public ResponseEntity<Map<String,String>> registration(@RequestBody @Valid RegistrationRequest user,
+                                   BindingResult bindingResult){
+        if(bindingResult.hasErrors()){
+            throw new UserNotCreatedException(bindingResult.getFieldError().getField() + " is empty");
+        }
+
+        registrationService.register(modelMapper.map(user,User.class));
+
+        User currentUser = userService.findByLogin(user.getLogin());
+
+        String token = jwtUtil.generateToken(user.getLogin());
+
+
+
+        return new ResponseEntity<>(Map.of("jwt-token", token,
+                "id", String.valueOf(currentUser.getId()),
+                "role", currentUser.getRole(),
+                "login", currentUser.getLogin()),
+                HttpStatus.OK);
     }
-//    @PostMapping("/register")
-//    public HttpStatus registration(@RequestBody RegistrationRequest user){
-//        registrationService.register(modelMapper.map(user.ge));
-//        return HttpStatus.OK;
-//    }
     @PostMapping("/login")
     public ResponseEntity<Map<String,String>> login (@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult){
 
@@ -74,9 +84,12 @@ public class AuthController {
         User currentUser = userService.findByLogin(authenticationRequest.getLogin());
 
         String token = jwtUtil.generateToken(authenticationRequest.getLogin());
-        return new ResponseEntity<>(Map.of("jwt-token", token,"id", String.valueOf(currentUser.getId()),"role", currentUser.getRole()), HttpStatus.OK);
+        return new ResponseEntity<>(Map.of("jwt-token", token,
+                "id", String.valueOf(currentUser.getId()),
+                "role", currentUser.getRole(),
+                "login", currentUser.getLogin()),
+                HttpStatus.OK);
     }
-
 
 
     @ExceptionHandler

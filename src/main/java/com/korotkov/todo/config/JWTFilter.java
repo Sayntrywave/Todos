@@ -39,6 +39,8 @@ public class JWTFilter extends OncePerRequestFilter {
             } else {
                 try {
                     String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
+
+                    //todo check do i need make query in db
                     UserDetails userDetails = myUserDetailsService.loadUserByUsername(username);
 
                     UsernamePasswordAuthenticationToken authToken =

@@ -1,8 +1,10 @@
 package com.korotkov.todo.service;
 
 
+import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.UserRepository;
+import com.korotkov.todo.util.UserNotCreatedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,10 @@ public class RegistrationService {
     @Transactional
     public void register(User user){
         //todo check unique
-//        if(repository.existsByLogin())
+        String login = user.getLogin();
+        if(repository.existsUserByLogin(login)){
+            throw new UserNotCreatedException("login <" + login + "> has already been taken");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("ROLE_USER");
         repository.save(user);

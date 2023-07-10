@@ -55,6 +55,4 @@ public class User {
         }
         todos.add(todo);
     }
-
-
 }

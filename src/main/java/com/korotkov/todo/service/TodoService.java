@@ -39,7 +39,8 @@ public class TodoService {
     @Transactional
     public void save(Todo todo){
         String title = todo.getTitle();
-        if (todoRepository.existsTodoByTitle(title)) {
+        int id = todo.getId();
+        if (todoRepository.existsTodoByTitleAndIdIsNot(title,id)) {
             throw new TodoNotCreatedException("title <" + title + "> isn't unique");
         }
 
@@ -48,17 +49,21 @@ public class TodoService {
 
     @Transactional
     public void update(Todo todo, int id, User currentUser){
-
         int currUserId = currentUser.getId();
-        currentUser = userService.getById(currUserId);
 
+        Todo todoById = getById(id);
 
-        if(currentUser.getRole().equals("ROLE_ADMIN") || getById(id).getCreatedBy().getId() == currUserId){
-            todo.setId(id);
-            todo.setCreatedBy(getById(id).getCreatedBy());
-            save(todo);
+        if(todoById.getTitle().equals(todo.getTitle()) == todoById.getDescription().equals(todo.getDescription())){
+            return;
         }
-        //trow exception
+
+        User creatorTodo = todoById.getCreatedBy(); // in db by id
+
+        if(currentUser.getRole().equals("ROLE_ADMIN") || creatorTodo.getId() == currUserId){
+            todo.setId(id);
+            todo.setCreatedBy(creatorTodo);
+            save(todo); //save
+        }
     }
 
     @Transactional

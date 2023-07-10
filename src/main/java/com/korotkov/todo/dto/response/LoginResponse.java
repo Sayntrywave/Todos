@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class LoginResponse {
-    private String name;
+    private String login;
     private String role;
 }

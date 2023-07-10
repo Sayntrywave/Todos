@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class TodoRequest {
     @NotEmpty
     private String title;
-    @NotEmpty
+//    @NotEmpty
     private String description;
 }
