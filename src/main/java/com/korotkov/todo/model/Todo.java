@@ -25,6 +25,8 @@ public class Todo {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User createdBy;
 
+
+
     public Todo(String title, String description) {
         this.title = title;
         this.description = description;

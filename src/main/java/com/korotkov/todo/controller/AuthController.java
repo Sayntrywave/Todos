@@ -63,14 +63,14 @@ public class AuthController {
         return new ResponseEntity<>(Map.of("jwt-token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
-                "login", currentUser.getLogin()),
+                "login", currentUser.getLogin(),
+                    "color", currentUser.getColor()),
                 HttpStatus.OK);
     }
     @PostMapping("/login")
     public ResponseEntity<Map<String,String>> login (@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult){
-
         if(bindingResult.hasErrors()){
-            throw new UserNotCreatedException(bindingResult.getFieldError().getField() + " is empty");
+            throw new BadCredentialsException(bindingResult.getFieldError().getField() + " is empty");
         }
 
         UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(
@@ -87,7 +87,8 @@ public class AuthController {
         return new ResponseEntity<>(Map.of("jwt-token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
-                "login", currentUser.getLogin()),
+                "login", currentUser.getLogin(),
+                "color", currentUser.getColor()),
                 HttpStatus.OK);
     }
 

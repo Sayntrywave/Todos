@@ -1,12 +1,14 @@
 package com.korotkov.todo.dto.request;
 
-import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class UserRequest {
-    @Valid
+public class UserEditRequest {
+
     private String role;
+    private String login;
+    private String password;
+    private String color;
 }

@@ -5,6 +5,7 @@ import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.TodoRepository;
 import com.korotkov.todo.util.TodoNotCreatedException;
 import com.korotkov.todo.util.TodoNotFoundException;
+import com.korotkov.todo.util.UserHasNoRightsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,10 +60,15 @@ public class TodoService {
 
         User creatorTodo = todoById.getCreatedBy(); // in db by id
 
-        if(currentUser.getRole().equals("ROLE_ADMIN") || creatorTodo.getId() == currUserId){
+
+        //currentUser.getRole().equals("ROLE_ADMIN") ||
+        if( creatorTodo.getId() == currUserId){
             todo.setId(id);
             todo.setCreatedBy(creatorTodo);
             save(todo); //save
+        }
+        else {
+            throw new UserHasNoRightsException("you can't edit todos of other users");
         }
     }
 

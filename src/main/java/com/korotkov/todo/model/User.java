@@ -35,6 +35,12 @@ public class User {
     @OneToMany(mappedBy = "createdBy")
     private List<Todo> todos;
 
+    @Column(name = "color")
+    private String color;
+
+    @Column(name = "is_in_ban")
+    private boolean isInBan;
+
 
     public User(String name, String login, String password, String role) {
         this.name = name;
@@ -54,5 +60,22 @@ public class User {
             todos = new ArrayList<>();
         }
         todos.add(todo);
+    }
+
+    public void makeBan(){
+        isInBan = !isInBan;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", role='" + role + '\'' +
+                ", color='" + color + '\'' +
+                ", isInBan=" + isInBan +
+                '}';
     }
 }

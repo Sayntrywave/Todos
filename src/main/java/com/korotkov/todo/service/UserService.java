@@ -1,15 +1,18 @@
 package com.korotkov.todo.service;
 
-import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.UserRepository;
 import com.korotkov.todo.security.MyUserDetails;
+import com.korotkov.todo.util.UserHasNoRightsException;
+import com.korotkov.todo.util.UserNotCreatedException;
 import com.korotkov.todo.util.UserNotFoundException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +24,12 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -38,44 +43,78 @@ public class UserService {
         userRepository.save(user);
     }
     @Transactional
-    public void update(User user, int id, User currentUser){
-//        userRepository.
+    public boolean update(User user, int id, User currentUser){
 
-        if(currentUser.getRole().equals(Role.ROLE_USER)){
-            return;
+        boolean flag = false;
+        User userToBeUpdated = getById(id);
+        String role = user.getRole();
+        String color = user.getColor();
+        if((role != null && !role.isEmpty())|| (color != null && !color.isEmpty())){
+            //todo check roles
+            if(!currentUser.getRole().equals("ROLE_ADMIN")){
+                throw new UserHasNoRightsException("you can't change role with role " + currentUser.getRole());
+            }
+
+            if(role != null && !role.isEmpty()){
+                userToBeUpdated.setRole(role);
+            }
+            if(color != null && !color.isEmpty()){
+                userToBeUpdated.setColor(color);
+            }
+        }
+        String login = user.getLogin();
+        String password = user.getPassword();
+        if(login != null || password != null) {
+            if(currentUser.getId() != id){
+
+                throw new UserHasNoRightsException("you can't change another user info");
+            }
+            if(login != null && !login.isEmpty()){
+
+                if(userRepository.existsUserByLogin(login)){
+                    throw new BadCredentialsException("login <" + login + "> has already been taken");
+                }
+                flag = true;
+                userToBeUpdated.setLogin(login);
+            }
+            if(password != null && !password.isEmpty()){
+                userToBeUpdated.setPassword(passwordEncoder.encode(password));
+            }
+
+        }
+        save(userToBeUpdated);
+        return flag;
+    }
+    @Transactional
+    public void makeBannedById(int id, User byUser){
+        if(byUser.isInBan()){
+            throw new UserNotCreatedException("stay in ban loser");
+        }
+        String role = byUser.getRole();
+        if (!role.equals("ROLE_ADMIN")){
+            throw new UserHasNoRightsException("you can't change role with role " + role);
         }
 
+        if(byUser.getId() == id){
+            throw new UserNotCreatedException("you can't ban yourself");
+        }
         User userToBeUpdated = getById(id);
-        userToBeUpdated.setRole(user.getRole());
-
-        int currUserId = currentUser.getId();
-//
-//        Todo todoById = getById(id);
-//
-//        if(todoById.getTitle().equals(todo.getTitle()) == todoById.getDescription().equals(todo.getDescription())){
-//            return;
-//        }
-//
-//        User creatorTodo = todoById.getCreatedBy(); // in db by id
-//
-//        if(currentUser.getRole().equals("ROLE_ADMIN") || creatorTodo.getId() == currUserId){
-//            todo.setId(id);
-//            todo.setCreatedBy(creatorTodo);
-//            save(todo); //save
-//        }
+        userToBeUpdated.makeBan();
+        save(userToBeUpdated);
     }
 
 
     public User getById(int id) {
+        //переделать
         if (userRepository.existsById(id)) {
             return userRepository.getReferenceById(id);
         }
-        throw new UserNotFoundException();
+        throw new UserNotFoundException("user not found");
     }
 
 
     public User findByLogin(String login){
-        return userRepository.findUserByLogin(login).orElseThrow(UserNotFoundException::new);
+        return userRepository.findUserByLogin(login).orElseThrow(() -> new UserNotFoundException("user not found"));
     }
 
     public User getCurrentUser() {
@@ -97,4 +136,7 @@ public class UserService {
     }
 
 
+    public UserDetails loadUserByUsername(String username) {
+        return null;
+    }
 }

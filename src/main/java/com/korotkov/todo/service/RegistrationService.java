@@ -32,6 +32,7 @@ public class RegistrationService {
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("ROLE_USER");
+        user.setColor("#808080");
         repository.save(user);
 
     }

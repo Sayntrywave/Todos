@@ -1,15 +1,19 @@
 services:
   app:
-    image: syantrywave/todo-app:1.0.1
-    restart: always
+    image: syantrywave/todo-app:1.1.0
+    env_file:
+      - .env
+#    restart: always
     depends_on:
       - todo_db
     ports:
       - "8080:8080"
   todo_db:
     image: postgres
-    restart: always
+    env_file:
+      - db.env
+#    restart: always
     ports:
       - "5422:5432"
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"

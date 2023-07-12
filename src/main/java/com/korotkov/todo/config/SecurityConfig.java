@@ -37,18 +37,22 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
-                        httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(
-                                 (request, response, authException) ->
-                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage())
-                        ))
+                .exceptionHandling(handlingConfigurer ->{
+                    handlingConfigurer.authenticationEntryPoint(
+                                     (request, response, authException) -> {
+                                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+                                     }
+                    );
+                    }
+                )
+
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/login","/register","/test","/error").permitAll()
-                        .requestMatchers("/admin","/users").hasRole("ADMIN")
+                        .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
+        //add unauthorized
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

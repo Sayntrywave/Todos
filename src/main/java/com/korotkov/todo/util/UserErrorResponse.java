@@ -4,7 +4,7 @@ import com.korotkov.todo.model.User;
 
 public class UserErrorResponse {
     private int code = 0;
-    private String message;
+    private final String message;
 
     public UserErrorResponse(String message) {
         this.message = message;
