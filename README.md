@@ -1,4 +1,5 @@
 # Todos
-Это мой проект на Gradle
+Это мой проект переписанный на Gradle
 
-Историю коммитов, описание и все все смотрите здесь https://github.com/Sayntrywave/Todos
+
+Актуальную версию, историю коммитов, описание и все все смотрите здесь https://github.com/Sayntrywave/Todos
