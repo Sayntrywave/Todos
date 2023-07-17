@@ -25,6 +25,13 @@ public class Todo {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User createdBy;
 
+    @Column(name = "is_completed")
+    private Boolean isCompleted;
+
+    @Column(name = "time_spent")
+    private Integer timeSpent;
+
+
 
 
     public Todo(String title, String description) {

@@ -7,6 +7,7 @@ import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.UserService;
 import com.korotkov.todo.util.TodoErrorResponse;
 import com.korotkov.todo.util.UserHasNoRightsException;
+import com.korotkov.todo.util.UserNotCreatedException;
 import com.korotkov.todo.util.UserNotFoundException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
@@ -52,8 +53,9 @@ public class AdminController {
     public ResponseEntity<Map<String,String>> editUser(@RequestBody @Valid UserEditRequest userEditRequest,
                                         BindingResult bindingResult,
                                         @PathVariable("id") int id){
+
         if (bindingResult.hasErrors()) {
-            throw new BadCredentialsException(bindingResult.getFieldError().getField() + " is empty");
+            throw new BadCredentialsException(bindingResult.getFieldError().getField() + bindingResult.getFieldError().getDefaultMessage());
         }
         User currentUser = userService.getCurrentUser();
         boolean update = userService.update(modelMapper.map(userEditRequest, User.class), id, currentUser);
@@ -71,6 +73,12 @@ public class AdminController {
 
     @ExceptionHandler
     private ResponseEntity<TodoErrorResponse> handleException(UserHasNoRightsException e)
+    {
+        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
+        return new ResponseEntity<>(todoErrorResponse,HttpStatus.FORBIDDEN);
+    }
+    @ExceptionHandler
+    private ResponseEntity<TodoErrorResponse> handleException(UserNotCreatedException e)
     {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
         return new ResponseEntity<>(todoErrorResponse,HttpStatus.FORBIDDEN);

@@ -66,7 +66,6 @@ public class UserService {
         String password = user.getPassword();
         if(login != null || password != null) {
             if(currentUser.getId() != id){
-
                 throw new UserHasNoRightsException("you can't change another user info");
             }
             if(login != null && !login.isEmpty()){

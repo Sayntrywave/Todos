@@ -54,22 +54,42 @@ public class TodoService {
 
         Todo todoById = getById(id);
 
-        if(todoById.getTitle().equals(todo.getTitle()) == todoById.getDescription().equals(todo.getDescription())){
+
+        if(isAllFieldsNull(todo)){
             return;
         }
+
 
         User creatorTodo = todoById.getCreatedBy(); // in db by id
 
 
-        //currentUser.getRole().equals("ROLE_ADMIN") ||
         if( creatorTodo.getId() == currUserId){
-            todo.setId(id);
-            todo.setCreatedBy(creatorTodo);
-            save(todo); //save
+            String title = todo.getTitle();
+            if (title != null) {
+                todoById.setTitle(title);
+            }
+            String Description = todo.getDescription();
+            if (Description != null) {
+                todoById.setDescription(Description);
+            }
+            Integer timeSpent = todo.getTimeSpent();
+            if (timeSpent != null) {
+                todoById.setTimeSpent(timeSpent);
+            }
+            Boolean isCompleted = todo.getIsCompleted();
+            if (isCompleted != null) {
+                todoById.setIsCompleted(isCompleted);
+            }
+            save(todoById); //save
         }
         else {
             throw new UserHasNoRightsException("you can't edit todos of other users");
         }
+    }
+
+    private boolean isAllFieldsNull(Todo todo){
+        return todo.getIsCompleted() == null && todo.getTitle() == null && todo.getDescription() == null &&
+                todo.getTimeSpent() == null;
     }
 
     @Transactional

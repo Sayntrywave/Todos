@@ -12,5 +12,8 @@ public class TodoResponse {
     private String description;
 //    private String createdBy;
     private UserResponse creator;
+    private boolean isCompleted;
+    private String timeSpent;
+
     //login, id, role
 }

@@ -49,7 +49,7 @@ public class AuthController {
     public ResponseEntity<Map<String,String>> registration(@RequestBody @Valid RegistrationRequest user,
                                    BindingResult bindingResult){
         if(bindingResult.hasErrors()){
-            throw new UserNotCreatedException(bindingResult.getFieldError().getField() + " is empty");
+            throw new UserNotCreatedException(bindingResult.getFieldError().getDefaultMessage());
         }
 
         registrationService.register(modelMapper.map(user,User.class));
@@ -70,7 +70,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String,String>> login (@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult){
         if(bindingResult.hasErrors()){
-            throw new BadCredentialsException(bindingResult.getFieldError().getField() + " is empty");
+            throw new BadCredentialsException(bindingResult.getFieldError().getDefaultMessage());
         }
 
         UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(
