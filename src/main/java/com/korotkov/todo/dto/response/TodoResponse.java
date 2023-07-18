@@ -1,6 +1,7 @@
 package com.korotkov.todo.dto.response;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ public class TodoResponse {
     private String description;
 //    private String createdBy;
     private UserResponse creator;
+    @JsonProperty(value = "isCompleted")
     private boolean isCompleted;
     private String timeSpent;
 

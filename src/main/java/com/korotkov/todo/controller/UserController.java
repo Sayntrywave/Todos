@@ -45,7 +45,6 @@ public class UserController {
 
     @GetMapping("/me")
     public LoginResponse getInfo() {
-        System.out.println("ПРОШЕЛ");
         return modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
     }
 

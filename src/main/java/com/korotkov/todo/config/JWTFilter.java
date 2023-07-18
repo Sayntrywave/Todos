@@ -58,8 +58,9 @@ public class JWTFilter extends OncePerRequestFilter {
                     }
                 } catch (JWTVerificationException exc) {
                     //todo why i'm getting 500 error
-                    httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                            "Invalid JWT Token");
+//                    SecurityContextHolder.createEmptyContext();
+//                    httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST,
+//                            "Invalid JWT Token");
                 }
             }
         }
