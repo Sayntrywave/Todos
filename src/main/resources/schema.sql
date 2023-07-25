@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users(
     name VARCHAR(15),
     login VARCHAR(30) UNIQUE NOT NULL,
     password VARCHAR(80) NOT NULL,
-    role VARCHAR(30),
+--     role VARCHAR(30),
     color VARCHAR(30),
     is_in_ban boolean
 );

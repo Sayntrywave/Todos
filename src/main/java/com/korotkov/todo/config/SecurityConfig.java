@@ -38,12 +38,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(handlingConfigurer ->{
-                    handlingConfigurer.accessDeniedHandler((request, response, accessDeniedException) -> System.out.println("i'm he"));
-
                     handlingConfigurer.authenticationEntryPoint(
                                      (request, response, authException) -> {
                                          response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-                                         System.out.println("tyt");
                                      }
                     );
                     }

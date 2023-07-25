@@ -1,7 +1,9 @@
 package com.korotkov.todo.service;
 
+import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.model.User;
+import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.UserRepository;
 import com.korotkov.todo.security.MyUserDetails;
 import com.korotkov.todo.util.UserHasNoRightsException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -26,10 +29,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final RoleRepository roleRepository;
+    //roleRepository
+    //
+
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
 
@@ -47,20 +55,17 @@ public class UserService {
 
         boolean flag = false;
         User userToBeUpdated = getById(id);
-        String role = user.getRole();
         String color = user.getColor();
-        if((role != null && !role.isEmpty())|| (color != null && !color.isEmpty())){
+        if(color != null && !color.isEmpty()){
             //todo check roles
-            if(!currentUser.getRole().equals("ROLE_ADMIN")){
+            if(!currentUser.getRole().equals("ADMIN")){
                 throw new UserHasNoRightsException("you can't change role with role " + currentUser.getRole());
             }
 
-            if(role != null && !role.isEmpty()){
-                userToBeUpdated.setRole(role);
-            }
-            if(color != null && !color.isEmpty()){
+//            if(role != null && !role.isEmpty()){
+//                userToBeUpdated.setRole(role);
+//            }
                 userToBeUpdated.setColor(color);
-            }
         }
         String login = user.getLogin();
         String password = user.getPassword();
@@ -83,6 +88,17 @@ public class UserService {
         }
         save(userToBeUpdated);
         return flag;
+    }
+
+    @Transactional
+    public void updateRole(String name, int id, User currentUser){
+        if(currentUser.hasRightsToChange()){
+            Role roleByName = roleRepository.getRoleByName(name.substring(5))
+                    .orElseThrow(() -> new UserHasNoRightsException("you can't change role with role " + currentUser.getRole()));
+            User user = userRepository.getReferenceById(id);
+            user.setRole(roleByName);
+            save(user);
+        }
     }
     @Transactional
     public void makeBannedById(int id, User byUser){

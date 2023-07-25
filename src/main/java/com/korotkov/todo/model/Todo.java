@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "todos")
 @Data
@@ -30,6 +33,12 @@ public class Todo {
 
     @Column(name = "time_spent")
     private Integer timeSpent;
+
+    @OneToMany
+    @JoinTable(name = "todos_users",
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private List<TodoUser> todoUserList = new ArrayList<>();
 
 
 

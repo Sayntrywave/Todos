@@ -58,7 +58,12 @@ public class AdminController {
             throw new BadCredentialsException(bindingResult.getFieldError().getField() + bindingResult.getFieldError().getDefaultMessage());
         }
         User currentUser = userService.getCurrentUser();
-        boolean update = userService.update(modelMapper.map(userEditRequest, User.class), id, currentUser);
+
+        if(!userEditRequest.isNull()){
+            userService.updateRole(userEditRequest.getStringRole(), id, currentUser);
+        }
+        User map = modelMapper.map(userEditRequest, User.class);
+        boolean update = userService.update(map, id, currentUser);
         if (update){
             String token = jwtUtil.generateToken(userEditRequest.getLogin());
             return new ResponseEntity<>(Map.of("jwt-token", token), HttpStatus.OK);

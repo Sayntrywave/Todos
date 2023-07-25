@@ -45,7 +45,9 @@ public class UserController {
 
     @GetMapping("/me")
     public LoginResponse getInfo() {
-        return modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
+        LoginResponse map = modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
+        map.setRole("ROLE_ADMIN");
+        return map;
     }
 
 
