@@ -2,6 +2,7 @@ package com.korotkov.todo.service;
 
 import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.Todo;
+import com.korotkov.todo.model.TodoUser;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.UserRepository;
@@ -143,9 +144,9 @@ public class UserService {
         return new User();
     }
 
-    public List<Todo> getTodos(User user) {
+    public List<TodoUser> getTodos(User user) {
         User user1 = getById(user.getId());
-        List<Todo> todos = user1.getTodos();
+        List<TodoUser> todos = user1.getTodos();
         Hibernate.initialize(todos);
         return todos;
     }

@@ -5,8 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "todos")
@@ -24,9 +23,9 @@ public class Todo {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User createdBy;
+//    @ManyToOne
+//    @JoinColumn(name = "user_id", referencedColumnName = "id")
+//    private User createdBy;
 
     @Column(name = "is_completed")
     private Boolean isCompleted;
@@ -38,26 +37,31 @@ public class Todo {
     @JoinTable(name = "todos_users",
             joinColumns = @JoinColumn(name = "todo_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<TodoUser> todoUserList = new ArrayList<>();
-
+    private List<TodoUser> users = new ArrayList<>();
+//    @MapKey(name = "User")
+//    private Map<User, Role> usersByRole = new LinkedHashMap<>();
 
 
 
     public Todo(String title, String description) {
+
         this.title = title;
         this.description = description;
     }
 
-    public Todo(String title, String description, User createdBy) {
-        this.title = title;
-        this.description = description;
-        this.createdBy = createdBy;
-    }
 
     @Override
     public String toString() {
         return "Todo{" +
                 "title='" + title + '\'' +
                 '}';
+    }
+
+    public User getCreator() {
+        if (users.isEmpty()){
+            return null;
+        }
+        return users.get(0).getUser();
+//        return users.entrySet().iterator().next().getKey();
     }
 }

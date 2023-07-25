@@ -2,9 +2,13 @@ package com.korotkov.todo.model;
 
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "todos_users")
+@Data
+@NoArgsConstructor
 public class TodoUser {
 
     @Id
@@ -23,5 +27,9 @@ public class TodoUser {
     @JoinColumn(name = "role_id",referencedColumnName = "id")
     private Role role;
 
-
+    public TodoUser(Todo todo, User user, Role role) {
+        this.todo = todo;
+        this.user = user;
+        this.role = role;
+    }
 }

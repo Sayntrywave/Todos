@@ -1,11 +1,13 @@
 package com.korotkov.todo.controller;
 
 
+import com.korotkov.todo.dto.request.TodoUserRequest;
 import com.korotkov.todo.dto.request.TodoRequest;
 import com.korotkov.todo.dto.response.LoginResponse;
 import com.korotkov.todo.dto.response.TodoResponse;
 import com.korotkov.todo.dto.response.UserResponse;
 import com.korotkov.todo.model.Todo;
+import com.korotkov.todo.model.User;
 import com.korotkov.todo.service.TodoService;
 import com.korotkov.todo.service.UserService;
 import com.korotkov.todo.util.TodoErrorResponse;
@@ -17,6 +19,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,9 +70,9 @@ public class UserController {
         }
 
         Todo todo = modelMapper.map(todoRequest, Todo.class);
-        todo.setCreatedBy(userService.getCurrentUser());
-        todoService.save(todo);
-        return new ResponseEntity<>(getTodoResponse(todo), HttpStatus.valueOf(201));
+        User currentUser = userService.getCurrentUser();
+        todoService.save(todo, currentUser);
+        return new ResponseEntity<>(getTodoResponse(todo, currentUser), HttpStatus.valueOf(201));
     }
 
     @GetMapping("/todos/{id}")
@@ -100,9 +103,31 @@ public class UserController {
     }
 
 
+    @PutMapping("/todo/{id}/privileges")
+    public HttpStatus setPrivileges(@RequestBody @Valid TodoUserRequest userRequest,
+                                    BindingResult bindingResult,
+                                    @PathVariable int id){
+
+        if (bindingResult.hasErrors()){
+            //todo exception handling
+        }
+        Todo byId = todoService.getById(id);
+
+        User from = userService.getCurrentUser();
+        User to = userService.findByLogin(userRequest.getLogin());
+        todoService.setUser(byId,userRequest.getPrivilege(),from,to);
+        return HttpStatus.NO_CONTENT;
+    }
+
+
+    private TodoResponse getTodoResponse(Todo todo, User creator) {
+        TodoResponse newTodo = modelMapper.map(todo, TodoResponse.class);
+        newTodo.setCreator(modelMapper.map(creator, UserResponse.class));
+        return newTodo;
+    }
     private TodoResponse getTodoResponse(Todo todo) {
         TodoResponse newTodo = modelMapper.map(todo, TodoResponse.class);
-        newTodo.setCreator(modelMapper.map(todo.getCreatedBy(), UserResponse.class));
+        newTodo.setCreator(modelMapper.map(todo.getCreator(), UserResponse.class));
         return newTodo;
     }
 

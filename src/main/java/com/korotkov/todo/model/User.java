@@ -34,8 +34,12 @@ public class User {
     private Role role;
 //    @Column(name = "role")
 
-    @OneToMany(mappedBy = "createdBy")
-    private List<Todo> todos;
+    @OneToMany
+    @JoinTable(name = "todos_users",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "todo_id"))
+    private List<TodoUser> todos;
+
 
     @Column(name = "color")
     private String color;
@@ -55,13 +59,6 @@ public class User {
         this.login = login;
         this.password = password;
         this.role = role;
-    }
-
-    public void setTodo(Todo todo){
-        if (todos == null) {
-            todos = new ArrayList<>();
-        }
-        todos.add(todo);
     }
 
     public void makeBan(){
