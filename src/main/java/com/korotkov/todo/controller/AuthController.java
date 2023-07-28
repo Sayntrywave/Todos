@@ -73,6 +73,8 @@ public class AuthController {
             throw new BadCredentialsException(bindingResult.getFieldError().getDefaultMessage());
         }
 
+
+
         UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getLogin(),
                 authenticationRequest.getPassword()
@@ -84,6 +86,7 @@ public class AuthController {
         User currentUser = userService.findByLogin(authenticationRequest.getLogin());
 
         String token = jwtUtil.generateToken(authenticationRequest.getLogin());
+
         return new ResponseEntity<>(Map.of("jwt-token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),

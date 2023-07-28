@@ -6,7 +6,9 @@ import com.korotkov.todo.dto.request.TodoRequest;
 import com.korotkov.todo.dto.response.LoginResponse;
 import com.korotkov.todo.dto.response.TodoResponse;
 import com.korotkov.todo.dto.response.UserResponse;
+import com.korotkov.todo.dto.response.UserTodo;
 import com.korotkov.todo.model.Todo;
+import com.korotkov.todo.model.TodoUser;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.service.TodoService;
 import com.korotkov.todo.service.UserService;
@@ -19,12 +21,14 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.MultiValueMapAdapter;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 
 @RestController
@@ -56,10 +60,8 @@ public class UserController {
 
     @GetMapping("/todos")
     public ResponseEntity<List<TodoResponse>> getTodos() {
-        List<Todo> todos = todoService.getAll();
-        return new ResponseEntity<>(todos.stream().
-                map(this::getTodoResponse)
-                .collect(Collectors.toList()), HttpStatus.OK);
+        List<TodoUser> todos = todoService.getTodoUser();
+        return new ResponseEntity<>(getTodosResponse(todos), HttpStatus.OK);
     }
 
     @PostMapping("/todos")
@@ -72,12 +74,12 @@ public class UserController {
         Todo todo = modelMapper.map(todoRequest, Todo.class);
         User currentUser = userService.getCurrentUser();
         todoService.save(todo, currentUser);
-        return new ResponseEntity<>(getTodoResponse(todo, currentUser), HttpStatus.valueOf(201));
+        return new ResponseEntity<>(getTodosResponse(todo, currentUser), HttpStatus.valueOf(201));
     }
 
     @GetMapping("/todos/{id}")
     public ResponseEntity<TodoResponse> getTodo(@PathVariable int id) {
-        return new ResponseEntity<>(getTodoResponse(todoService.getById(id)), HttpStatus.valueOf(200));
+        return new ResponseEntity<>(getTodoResponse(todoService.getByIdTodoUser(id)), HttpStatus.valueOf(200));
     }
 
     @PutMapping("/todos/{id}")
@@ -120,15 +122,51 @@ public class UserController {
     }
 
 
-    private TodoResponse getTodoResponse(Todo todo, User creator) {
-        TodoResponse newTodo = modelMapper.map(todo, TodoResponse.class);
-        newTodo.setCreator(modelMapper.map(creator, UserResponse.class));
+    private TodoResponse getTodosResponse(Todo todoUser, User creator) {
+        TodoResponse newTodo = modelMapper.map(todoUser, TodoResponse.class);
+        List<UserTodo> userResponse = new ArrayList<>();
+        UserTodo map = modelMapper.map(creator, UserTodo.class);
+        map.setRole("CREATOR");
+        userResponse.add(map);
+        newTodo.setUsers(userResponse);
         return newTodo;
     }
-    private TodoResponse getTodoResponse(Todo todo) {
-        TodoResponse newTodo = modelMapper.map(todo, TodoResponse.class);
-        newTodo.setCreator(modelMapper.map(todo.getCreator(), UserResponse.class));
-        return newTodo;
+    private List<TodoResponse> getTodosResponse(List<TodoUser> todoUser) {
+//        MultiMap<Todo, UserTodo> userTodoMap = new MultiMap<>();
+
+        MultiValueMapAdapter<Todo,UserTodo> userTodoMap = new MultiValueMapAdapter<>(new HashMap<>());
+        for (TodoUser user : todoUser) {
+
+            userTodoMap.add(user.getTodo(),
+                    new UserTodo(modelMapper.map(user.getUser(), UserResponse.class),
+                            user.getRole().getName()));
+        }
+
+        List<TodoResponse> response = new ArrayList<>();
+//
+//        for (Map.Entry<Todo, UserTodo> entry : userTodoMap.entrySet()) {
+//            response.add(new TodoResponse(entry.getKey(),e));
+//        }
+        for (Map.Entry<Todo, List<UserTodo>> entry : userTodoMap.entrySet()) {
+
+            TodoResponse todoResponse = modelMapper.map(entry.getKey(), TodoResponse.class);
+            todoResponse.setUsers(entry.getValue());
+            response.add(todoResponse);
+        }
+//
+//        TodoResponse newTodo = modelMapper.map(todoUser.getTodo(), TodoResponse.class);
+//        List<UserTodo> userResponse = todoUser.getUsers().entrySet().stream().map(entry -> {
+//
+//            UserTodo map = modelMapper.map(entry.getKey(), UserTodo.class);
+//            map.setRole(entry.getValue().getRole().getName());
+//            return map ;
+//        }).toList();
+//        newTodo.setUsers(userResponse);
+        return response;
+    }
+
+    private TodoResponse getTodoResponse(List<TodoUser> todoUser) {
+        return getTodosResponse(todoUser).get(0);
     }
 
 

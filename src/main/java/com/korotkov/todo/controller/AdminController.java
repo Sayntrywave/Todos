@@ -66,7 +66,7 @@ public class AdminController {
         boolean update = userService.update(map, id, currentUser);
         if (update){
             String token = jwtUtil.generateToken(userEditRequest.getLogin());
-            return new ResponseEntity<>(Map.of("jwt-token", token), HttpStatus.OK);
+            return new ResponseEntity<>(Map.of("token", token), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

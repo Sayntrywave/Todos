@@ -1,5 +1,6 @@
 package com.korotkov.todo.service;
 
+import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.model.TodoUser;
 import com.korotkov.todo.model.User;
@@ -13,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional(readOnly = true)
@@ -34,7 +37,7 @@ public class TodoService {
     }
 
 
-    public Todo getById(int id){
+    public Todo getById(int id) {
 
         if (todoRepository.existsById(id)) {
             return todoRepository.getReferenceById(id);
@@ -42,33 +45,66 @@ public class TodoService {
         throw new TodoNotFoundException();
     }
 
-    public List<Todo> getAll(){
+    public List<TodoUser> getByIdTodoUser(int id) {
+        List<TodoUser> todo = todoUserRepository.getTodoUsersByTodoId(id);
+        if (todo.isEmpty()) {
+            throw new TodoNotFoundException();
+        }
+        return todo;
+
+    }
+
+    public List<Todo> getAll() {
         return todoRepository.findAll();
     }
 
+    public List<TodoUser> getTodoUser() {
+        return todoUserRepository.findAll();
+    }
+
+    public Map<User, Role> getUserAndTheirRoles() {
+        List<TodoUser> todoUserList = todoUserRepository.findAll();
+        Map<User, Role> result = new HashMap<>();
+        todoUserList.forEach(todoUser -> result.put(todoUser.getUser(),
+                todoUser.getRole()));
+
+        return result;
+    }
+
     @Transactional
-    public void save(Todo todo, User creator){
+    public void save(Todo todo, User creator) {
 
         String title = todo.getTitle();
         int id = todo.getId();
-        if (todoRepository.existsTodoByTitleAndIdIsNot(title,id)) {
+        if (todoRepository.existsTodoByTitleAndIdIsNot(title, id)) {
             throw new TodoNotCreatedException("title <" + title + "> isn't unique");
         }
 
         todoRepository.save(todo);
-        if(todo.getCreator() == null){
-            roleRepository.getRoleByName("CREATOR").ifPresent(role -> todoUserRepository.save(new TodoUser(todo,creator,role)));
+        if (todo.getCreator() == null) {
+            roleRepository.getRoleByName("CREATOR").ifPresent(role -> todoUserRepository.save(new TodoUser(todo, creator, role)));
         }
     }
 
     @Transactional
-    public void update(Todo todo, int id, User currentUser){
+    public void save(Todo todo) {
+        String title = todo.getTitle();
+        int id = todo.getId();
+        if (todoRepository.existsTodoByTitleAndIdIsNot(title, id)) {
+            throw new TodoNotCreatedException("title <" + title + "> isn't unique");
+        }
+
+        todoRepository.save(todo);
+    }
+
+    @Transactional
+    public void update(Todo todo, int id, User currentUser) {
         int currUserId = currentUser.getId();
 
         Todo todoById = getById(id);
 
 
-        if(isAllFieldsNull(todo)){
+        if (isAllFieldsNull(todo)) {
             return;
         }
 
@@ -76,7 +112,7 @@ public class TodoService {
         User creatorTodo = todoById.getCreator(); // in db by id
 
         //check rights
-        if(creatorTodo.getId() == currUserId){
+        if (creatorTodo.getId() == currUserId) {
             String title = todo.getTitle();
             if (title != null) {
                 todoById.setTitle(title);
@@ -93,26 +129,40 @@ public class TodoService {
             if (isCompleted != null) {
                 todoById.setIsCompleted(isCompleted);
             }
-            save(todoById,creatorTodo); //save
-        }
-        else {
+            save(todoById, creatorTodo); //save
+        } else {
             throw new UserHasNoRightsException("you can't edit todos of other users");
         }
     }
 
+    @Transactional
     public void setUser(Todo todo, String privilege, User from, User to) {
-//        roleRepository.getRoleByName(privilege).ifPresent(role -> {
-//            if(todo.getUsersByRole().)
-//        });
+        privilege = privilege.toUpperCase();
+        String finalPrivilege = privilege;
+        roleRepository.getRoleByName(privilege).ifPresent(role ->
+                todoUserRepository.getTodoUserByUserIdAndTodoId(from.getId(), todo.getId()).ifPresent(todoUser -> {
+                    Role role1 = todoUser.getRole();
+                    if (Role.canModerate(role1, role)) {
+                        if (finalPrivilege.equals("NONE")){
+                            todoUserRepository.deleteByUserId(to.getId());
+                        }
+                        else {
+                            TodoUser todoUser2 = new TodoUser(todo, to, role);
+                            todoUserRepository.save(todoUser2);
+                        }
+                    }
+                })
+        );
+
     }
 
-    private boolean isAllFieldsNull(Todo todo){
+    private boolean isAllFieldsNull(Todo todo) {
         return todo.getIsCompleted() == null && todo.getTitle() == null && todo.getDescription() == null &&
                 todo.getTimeSpent() == null;
     }
 
     @Transactional
-    public void delete(int id){
+    public void delete(int id) {
         todoRepository.delete(getById(id));
     }
 

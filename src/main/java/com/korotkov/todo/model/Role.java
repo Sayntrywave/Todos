@@ -21,4 +21,9 @@ public class Role {
     public Role(String name) {
         this.name = name;
     }
+
+    public static boolean canModerate(Role role, Role toRole) {
+        String roleInString = role.getName().toUpperCase();
+        return toRole.getId() > role.getId() && (roleInString.equals("CREATOR") || roleInString.equals("OWNER"));
+    }
 }

@@ -33,13 +33,48 @@ public class Todo {
     @Column(name = "time_spent")
     private Integer timeSpent;
 
-    @OneToMany
+//    @OneToMany
+//    @JoinTable(name = "todos_users",
+//            joinColumns = @JoinColumn(name = "todo_id"),
+//            inverseJoinColumns = @JoinColumn(name = "role_id"))
+
+//    @ElementCollection
+//    @CollectionTable(name = "todos_users",
+//    joinColumns = @JoinColumn(name = "todo_id"))
+////    @JoinColumn(name = "")
+//    @MapKeyColumn(name = "user_id")
+//    @Column(name = "role_id")
+//    @OneToMany
+//    @MapKeyJoinColumn(name = "")
+//    @Column(name = "role_id")
+//    @MapKey(name = "user")
+//    @JoinColumn(name = "role_id")
+//    @MapKeyJoinColumn(name = "")
+//    @MapKeyJoinColumn(name = "user_id")
+//    @JoinColumn(name = "role_id")
+    @OneToMany(targetEntity = User.class)
     @JoinTable(name = "todos_users",
-            joinColumns = @JoinColumn(name = "todo_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<TodoUser> users = new ArrayList<>();
+                joinColumns = @JoinColumn(name = "todo_id"),
+                inverseJoinColumns = {@JoinColumn(name = "user_id")})
+    private List<User> users = new ArrayList<>();
+
+    //todo разобраться как работает jointable под копотом
+//    private Map<User,Role> users = new LinkedHashMap<>(); <--- хотел бы так
+
+
+
+    //    private Map<User,TodoUser> users = new LinkedHashMap<>();
+//    @ElementCollection
+//    @CollectionTable(name = "todos_users",
+//            joinColumns = @JoinColumn(name = "todo_id"))
+//    @MapKeyColumn(name = "user_id")
+//    @Column(name = "role_id")
+//    private Map<User,Role> rolesByUser = new LinkedHashMap<>();
+
+
+
+//    private List<TodoUser> users = new ArrayList<>();
 //    @MapKey(name = "User")
-//    private Map<User, Role> usersByRole = new LinkedHashMap<>();
 
 
 
@@ -49,7 +84,6 @@ public class Todo {
         this.description = description;
     }
 
-
     @Override
     public String toString() {
         return "Todo{" +
@@ -57,11 +91,22 @@ public class Todo {
                 '}';
     }
 
+    public void setUser(){
+
+    }
+
+
     public User getCreator() {
         if (users.isEmpty()){
             return null;
         }
-        return users.get(0).getUser();
-//        return users.entrySet().iterator().next().getKey();
+//        return users.get(0).getUser();
+        //by default creator is on the 1st index
+        return users.get(0);
     }
+
+//    public Role getRoleByUser(User user) {
+//        return users.get(user).getRole();
+//    }
+
 }
