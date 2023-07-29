@@ -57,16 +57,36 @@ public class UserService {
         boolean flag = false;
         User userToBeUpdated = getById(id);
         String color = user.getColor();
-        if(color != null && !color.isEmpty()){
+
+
+        Boolean isInBan = user.getIsInBan();
+        Role roleAsEntity = user.getRoleAsEntity();
+        if(color != null && !color.isEmpty() || roleAsEntity != null || isInBan != null){
             //todo check roles
-            if(!currentUser.getRole().equals("ADMIN")){
+            if(!currentUser.hasRightsToChange()){
                 throw new UserHasNoRightsException("you can't change role with role " + currentUser.getRole());
             }
+
+
+//            Role roleByName = roleRepository.getRoleByName(name.substring(5))
+//                    .orElseThrow(() -> new UserHasNoRightsException("you can't change role with role " + currentUser.getRole()));
+////            User user = userRepository.getReferenceById(id);
+//            user.setRole(roleByName);
 
 //            if(role != null && !role.isEmpty()){
 //                userToBeUpdated.setRole(role);
 //            }
+            if(roleAsEntity != null){
+                userToBeUpdated.setRole(roleAsEntity);
+            }
+            if(isInBan != null){
+                userToBeUpdated.setIsInBan(isInBan);
+            }
+
+            if(color != null){
                 userToBeUpdated.setColor(color);
+
+            }
         }
         String login = user.getLogin();
         String password = user.getPassword();
@@ -91,33 +111,42 @@ public class UserService {
         return flag;
     }
 
-    @Transactional
-    public void updateRole(String name, int id, User currentUser){
-        if(currentUser.hasRightsToChange()){
-            Role roleByName = roleRepository.getRoleByName(name.substring(5))
-                    .orElseThrow(() -> new UserHasNoRightsException("you can't change role with role " + currentUser.getRole()));
-            User user = userRepository.getReferenceById(id);
-            user.setRole(roleByName);
-            save(user);
-        }
-    }
-    @Transactional
-    public void makeBannedById(int id, User byUser){
-        if(byUser.isInBan()){
-            throw new UserNotCreatedException("stay in ban loser");
-        }
-        String role = byUser.getRole();
-        if (!role.equals("ROLE_ADMIN")){
-            throw new UserHasNoRightsException("you can't change role with role " + role);
-        }
-
-        if(byUser.getId() == id){
-            throw new UserNotCreatedException("you can't ban yourself");
-        }
-        User userToBeUpdated = getById(id);
-        userToBeUpdated.makeBan();
-        save(userToBeUpdated);
-    }
+//    @Transactional
+//    public void updateRole(String name, int id, User currentUser){
+//        if(currentUser.hasRightsToChange()){
+//            Role roleByName = roleRepository.getRoleByName(name.substring(5))
+//                    .orElseThrow(() -> new UserHasNoRightsException("you can't change role with role " + currentUser.getRole()));
+////            User user = userRepository.getReferenceById(id);
+//            user.setRole(roleByName);
+////            save(user);
+//        }
+//    }
+//    public void updateRole(String name, UserTobe id, User currentUser){
+//        if(currentUser.hasRightsToChange()){
+//            Role roleByName = roleRepository.getRoleByName(name.substring(5))
+//                    .orElseThrow(() -> new UserHasNoRightsException("you can't change role with role " + currentUser.getRole()));
+////            User user = userRepository.getReferenceById(id);
+//            user.setRole(roleByName);
+////            save(user);
+//        }
+//    }
+//    @Transactional
+//    public void makeBannedById(int id, User byUser){
+//        if(byUser.isInBan()){
+//            throw new UserNotCreatedException("stay in ban loser");
+//        }
+//        String role = byUser.getRole();
+//        if (!role.equals("ROLE_ADMIN")){
+//            throw new UserHasNoRightsException("you can't change role with role " + role);
+//        }
+//
+//        if(byUser.getId() == id){
+//            throw new UserNotCreatedException("you can't ban yourself");
+//        }
+//        User userToBeUpdated = getById(id);
+//        userToBeUpdated.makeBan();
+//        save(userToBeUpdated);
+//    }
 
 
     public User getById(int id) {

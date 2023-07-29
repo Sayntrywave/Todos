@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserTodo {
     private UserResponse user;
-    private String role;
+    private String privilege;
 }

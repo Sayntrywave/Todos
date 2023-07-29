@@ -60,7 +60,7 @@ public class AuthController {
 
 
 
-        return new ResponseEntity<>(Map.of("jwt-token", token,
+        return new ResponseEntity<>(Map.of("token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
                 "login", currentUser.getLogin(),
@@ -87,7 +87,10 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(authenticationRequest.getLogin());
 
-        return new ResponseEntity<>(Map.of("jwt-token", token,
+
+
+        //todo make id as int
+        return new ResponseEntity<>(Map.of("token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
                 "login", currentUser.getLogin(),

@@ -53,7 +53,7 @@ public class UserController {
     @GetMapping("/me")
     public LoginResponse getInfo() {
         LoginResponse map = modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
-        map.setRole("ROLE_ADMIN");
+        map.setRole("ADMIN");
         return map;
     }
 
@@ -100,7 +100,7 @@ public class UserController {
 
     @DeleteMapping("/todos/{id}")
     public HttpStatus deleteTodo(@PathVariable int id) {
-        todoService.delete(id);
+        todoService.delete(userService.getCurrentUser(),id);
         return HttpStatus.NO_CONTENT;
     }
 
@@ -126,7 +126,7 @@ public class UserController {
         TodoResponse newTodo = modelMapper.map(todoUser, TodoResponse.class);
         List<UserTodo> userResponse = new ArrayList<>();
         UserTodo map = modelMapper.map(creator, UserTodo.class);
-        map.setRole("CREATOR");
+        map.setPrivilege("CREATOR");
         userResponse.add(map);
         newTodo.setUsers(userResponse);
         return newTodo;

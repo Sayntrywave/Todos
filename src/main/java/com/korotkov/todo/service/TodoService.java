@@ -1,9 +1,6 @@
 package com.korotkov.todo.service;
 
-import com.korotkov.todo.model.Role;
-import com.korotkov.todo.model.Todo;
-import com.korotkov.todo.model.TodoUser;
-import com.korotkov.todo.model.User;
+import com.korotkov.todo.model.*;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.TodoRepository;
 import com.korotkov.todo.repository.TodoUserRepository;
@@ -11,12 +8,14 @@ import com.korotkov.todo.util.TodoNotCreatedException;
 import com.korotkov.todo.util.TodoNotFoundException;
 import com.korotkov.todo.util.UserHasNoRightsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -101,7 +100,7 @@ public class TodoService {
     public void update(Todo todo, int id, User currentUser) {
         int currUserId = currentUser.getId();
 
-        Todo todoById = getById(id);
+         Todo todoById = getById(id);
 
 
         if (isAllFieldsNull(todo)) {
@@ -111,8 +110,14 @@ public class TodoService {
 
         User creatorTodo = todoById.getCreator(); // in db by id
 
+        Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(currUserId,id);
+
+        Role role = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getRole();
+
         //check rights
-        if (creatorTodo.getId() == currUserId) {
+        // c || a && b
+        RoleAction action = (todo.getIsCompleted() != null) ? RoleAction.COMPLETE : RoleAction.EDIT;
+        if (Role.canEditTodo(role,action)) {
             String title = todo.getTitle();
             if (title != null) {
                 todoById.setTitle(title);
@@ -131,7 +136,7 @@ public class TodoService {
             }
             save(todoById, creatorTodo); //save
         } else {
-            throw new UserHasNoRightsException("you can't edit todos of other users");
+            throw new UserHasNoRightsException("you don't have privilege of action " + action);
         }
     }
 
@@ -142,12 +147,20 @@ public class TodoService {
         roleRepository.getRoleByName(privilege).ifPresent(role ->
                 todoUserRepository.getTodoUserByUserIdAndTodoId(from.getId(), todo.getId()).ifPresent(todoUser -> {
                     Role role1 = todoUser.getRole();
-                    if (Role.canModerate(role1, role)) {
+                    if (Role.canSetRole(role1, role)) {
                         if (finalPrivilege.equals("NONE")){
                             todoUserRepository.deleteByUserId(to.getId());
                         }
                         else {
-                            TodoUser todoUser2 = new TodoUser(todo, to, role);
+                            TodoUser todoUser2;
+                            Optional<TodoUser> tu = todoUserRepository.getTodoUserByUserIdAndTodoId(to.getId(), todo.getId());
+                            if(tu.isPresent()){
+                                todoUser2 = tu.get();
+                                todoUser2.setRole(role);
+                            }
+                            else {
+                                todoUser2 = new TodoUser(todo, to, role);
+                            }
                             todoUserRepository.save(todoUser2);
                         }
                     }
@@ -161,9 +174,23 @@ public class TodoService {
                 todo.getTimeSpent() == null;
     }
 
+
+
     @Transactional
-    public void delete(int id) {
-        todoRepository.delete(getById(id));
+    public void delete(User updatedBy,int id) {
+        Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(updatedBy.getId(),id);
+
+        Role role = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getRole();
+
+
+        RoleAction action = RoleAction.DELETE;
+        if(Role.canEditTodo(role, action)){
+            todoRepository.delete(getById(id));
+
+        }
+        else {
+            throw new UserHasNoRightsException("you don't have privilege of action " + action);
+        }
     }
 
 }

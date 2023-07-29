@@ -46,8 +46,8 @@ public class User {
     @Column(name = "color")
     private String color;
 
-    @Column(name = "is_in_ban")
-    private boolean isInBan;
+    @Column(name = "is_in_ban", columnDefinition = "boolean default false")
+    private Boolean isInBan;
 
 
     public User(String name, String login, String password, Role role) {
@@ -75,8 +75,13 @@ public class User {
         this.role = role;
     }
 
+
     public String getRole() {
         return role.getName();
+    }
+
+    public Role getRoleAsEntity(){
+        return role;
     }
 
 

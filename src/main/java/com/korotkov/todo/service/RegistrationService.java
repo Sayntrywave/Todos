@@ -36,6 +36,7 @@ public class RegistrationService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         roleRepository.getRoleByName("USER").ifPresent(user::setRole);
         user.setColor("#808080");
+        user.setIsInBan(false);
         repository.save(user);
 
     }
