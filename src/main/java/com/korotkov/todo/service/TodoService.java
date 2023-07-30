@@ -8,14 +8,19 @@ import com.korotkov.todo.util.TodoNotCreatedException;
 import com.korotkov.todo.util.TodoNotFoundException;
 import com.korotkov.todo.util.UserHasNoRightsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,11 +33,12 @@ public class TodoService {
     private final UserService userService;
 
     @Autowired
-    public TodoService(TodoUserRepository todoUserRepository, TodoRepository todoRepository, RoleRepository roleRepository, UserService userService) {
+    public TodoService(TodoUserRepository todoUserRepository, TodoRepository todoRepository, RoleRepository roleRepository, UserService userService, CacheManager cacheManager) {
         this.todoUserRepository = todoUserRepository;
         this.todoRepository = todoRepository;
         this.roleRepository = roleRepository;
         this.userService = userService;
+        this.cacheManager = cacheManager;
     }
 
 
@@ -57,9 +63,16 @@ public class TodoService {
         return todoRepository.findAll();
     }
 
+
+    @Cacheable(value = "todos")
     public List<TodoUser> getTodoUser() {
-        return todoUserRepository.findAll();
+//        System.out.println(cacheManager.getCache("users"));
+
+        List<TodoUser> todoUserList = todoUserRepository.findAll();
+//        new ConcurrentMapCache("users",)
+        return todoUserList;
     }
+    private final CacheManager cacheManager;
 
     public Map<User, Privilege> getUserAndTheirRoles() {
         List<TodoUser> todoUserList = todoUserRepository.findAll();
@@ -69,7 +82,6 @@ public class TodoService {
 
         return result;
     }
-
     @Transactional
     public void save(Todo todo, User creator) {
 
@@ -78,12 +90,15 @@ public class TodoService {
         if (todoRepository.existsTodoByTitleAndIdIsNot(title, id)) {
             throw new TodoNotCreatedException("title <" + title + "> isn't unique");
         }
+        cacheManager.getCache("todos").evict(new SimpleKey());
 
         todoRepository.save(todo);
+//        Cache users = cacheManager.getCache("users").;
         if (todo.getCreator() == null) {
             roleRepository.getRoleByName("CREATOR").ifPresent(role -> todoUserRepository.save(new TodoUser(todo, creator, role)));
         }
     }
+//    @CachePut("users")
 
     @Transactional
     public void save(Todo todo) {
@@ -140,6 +155,7 @@ public class TodoService {
         }
     }
 
+
     @Transactional
     public void setUser(Todo todo, String privilege, User from, User to) {
         privilege = privilege.toUpperCase();
@@ -162,6 +178,7 @@ public class TodoService {
                                 todoUser2 = new TodoUser(todo, to, role);
                             }
                             todoUserRepository.save(todoUser2);
+                            cacheManager.getCache("todos").evict(new SimpleKey());
                         }
                     }
                 })
@@ -176,6 +193,7 @@ public class TodoService {
 
 
 
+
     @Transactional
     public void delete(User updatedBy,int id) {
         Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(updatedBy.getId(),id);
@@ -185,6 +203,7 @@ public class TodoService {
 
         TodoAction todoAction = TodoAction.DELETE;
         if(Privilege.canEditTodo(privilege, todoAction)){
+            cacheManager.getCache("todos").evict(new SimpleKey());
             todoRepository.delete(getById(id));
 
         }

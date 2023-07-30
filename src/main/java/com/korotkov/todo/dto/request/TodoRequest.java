@@ -11,9 +11,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 @NoArgsConstructor
 public class TodoRequest {
 
-    @Size(max = 30,message = "Your can't make title more than 30 symbols. Try shorter :)")
+    @Size(max = 100,message = "Your can't make title more than 30 symbols. Try shorter :)")
     private String title;
-    @Size(max = 300, message = "Your can't make description more than 300 symbols. Try shorter :)")
+    @Size(max = 450, message = "Your can't make description more than 300 symbols. Try shorter :)")
     private String description;
 
     private Integer timeSpent;

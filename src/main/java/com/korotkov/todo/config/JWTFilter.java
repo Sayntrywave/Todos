@@ -41,7 +41,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 try {
                     String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
 
-                    //todo check do i need make query in db
+                    //todo check do i need make query to db
                     UserDetails userDetails = userService.loadUserByUsername(username);
 
                     if (!userDetails.isEnabled()) {

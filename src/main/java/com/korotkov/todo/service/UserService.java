@@ -8,6 +8,9 @@ import com.korotkov.todo.util.UserHasNoRightsException;
 import com.korotkov.todo.util.UserNotFoundException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,25 +29,32 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleRepository roleRepository;
+    private CacheManager cacheManager;
     //roleRepository
     //
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.cacheManager = cacheManager;
     }
 
 
-
+    @Cacheable("users")
     public List<User> getListOfUsers() {
 
         return userRepository.findAll();
     }
+
     @Transactional
-    public void save(User user){
+    public void save(User user)
+    {
         userRepository.save(user);
+        cacheManager.getCache("users").evict(new SimpleKey());
+
+
     }
     @Transactional
     public boolean update(User user, int id, User currentUser){
@@ -157,6 +167,7 @@ public class UserService {
         return userRepository.findUserByLogin(login).orElseThrow(() -> new UserNotFoundException("user not found"));
     }
 
+//    @Cacheable(value = "me",key = "")
     public User getCurrentUser() {
         //todo get user from jwt token
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
