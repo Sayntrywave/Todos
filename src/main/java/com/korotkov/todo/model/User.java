@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -33,7 +32,7 @@ public class User {
     @ManyToOne
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Role role;
+    private Privilege role;
 //    @Column(name = "role")
 
     @OneToMany
@@ -50,14 +49,14 @@ public class User {
     private Boolean isInBan;
 
 
-    public User(String name, String login, String password, Role role) {
+    public User(String name, String login, String password, Privilege role) {
         this.name = name;
         this.login = login;
         this.password = password;
         this.role = role;
     }
 
-    public User(String login, String password, Role role) {
+    public User(String login, String password, Privilege role) {
         this.login = login;
         this.password = password;
         this.role = role;
@@ -68,10 +67,10 @@ public class User {
     }
 
 
-//    public void setRole(String role) {
-//        this.role = new Role(role);
+//    public void setPrivilege(String role) {
+//        this.role = new Privilege(role);
 //    }
-    public void setRole(Role role) {
+    public void setRole(Privilege role) {
         this.role = role;
     }
 
@@ -80,7 +79,7 @@ public class User {
         return role.getName();
     }
 
-    public Role getRoleAsEntity(){
+    public Privilege getRoleAsEntity(){
         return role;
     }
 

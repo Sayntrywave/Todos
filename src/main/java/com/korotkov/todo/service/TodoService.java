@@ -61,11 +61,11 @@ public class TodoService {
         return todoUserRepository.findAll();
     }
 
-    public Map<User, Role> getUserAndTheirRoles() {
+    public Map<User, Privilege> getUserAndTheirRoles() {
         List<TodoUser> todoUserList = todoUserRepository.findAll();
-        Map<User, Role> result = new HashMap<>();
+        Map<User, Privilege> result = new HashMap<>();
         todoUserList.forEach(todoUser -> result.put(todoUser.getUser(),
-                todoUser.getRole()));
+                todoUser.getPrivilege()));
 
         return result;
     }
@@ -112,12 +112,12 @@ public class TodoService {
 
         Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(currUserId,id);
 
-        Role role = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getRole();
+        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getPrivilege();
 
         //check rights
         // c || a && b
-        RoleAction action = (todo.getIsCompleted() != null) ? RoleAction.COMPLETE : RoleAction.EDIT;
-        if (Role.canEditTodo(role,action)) {
+        TodoAction todoAction = (todo.getIsCompleted() != null) ? TodoAction.COMPLETE : TodoAction.EDIT;
+        if (Privilege.canEditTodo(privilege, todoAction)) {
             String title = todo.getTitle();
             if (title != null) {
                 todoById.setTitle(title);
@@ -136,7 +136,7 @@ public class TodoService {
             }
             save(todoById, creatorTodo); //save
         } else {
-            throw new UserHasNoRightsException("you don't have privilege of action " + action);
+            throw new UserHasNoRightsException("you don't have privilege of todoAction " + todoAction);
         }
     }
 
@@ -146,8 +146,8 @@ public class TodoService {
         String finalPrivilege = privilege;
         roleRepository.getRoleByName(privilege).ifPresent(role ->
                 todoUserRepository.getTodoUserByUserIdAndTodoId(from.getId(), todo.getId()).ifPresent(todoUser -> {
-                    Role role1 = todoUser.getRole();
-                    if (Role.canSetRole(role1, role)) {
+                    Privilege privilege1 = todoUser.getPrivilege();
+                    if (Privilege.canSetPrivilege(privilege1, role)) {
                         if (finalPrivilege.equals("NONE")){
                             todoUserRepository.deleteByUserId(to.getId());
                         }
@@ -156,7 +156,7 @@ public class TodoService {
                             Optional<TodoUser> tu = todoUserRepository.getTodoUserByUserIdAndTodoId(to.getId(), todo.getId());
                             if(tu.isPresent()){
                                 todoUser2 = tu.get();
-                                todoUser2.setRole(role);
+                                todoUser2.setPrivilege(role);
                             }
                             else {
                                 todoUser2 = new TodoUser(todo, to, role);
@@ -180,16 +180,16 @@ public class TodoService {
     public void delete(User updatedBy,int id) {
         Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(updatedBy.getId(),id);
 
-        Role role = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getRole();
+        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getPrivilege();
 
 
-        RoleAction action = RoleAction.DELETE;
-        if(Role.canEditTodo(role, action)){
+        TodoAction todoAction = TodoAction.DELETE;
+        if(Privilege.canEditTodo(privilege, todoAction)){
             todoRepository.delete(getById(id));
 
         }
         else {
-            throw new UserHasNoRightsException("you don't have privilege of action " + action);
+            throw new UserHasNoRightsException("you don't have privilege of todoAction " + todoAction);
         }
     }
 

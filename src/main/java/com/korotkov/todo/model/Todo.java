@@ -59,7 +59,7 @@ public class Todo {
     private List<User> users = new ArrayList<>();
 
     //todo разобраться как работает jointable под копотом
-//    private Map<User,Role> users = new LinkedHashMap<>(); <--- хотел бы так
+//    private Map<User,Privilege> users = new LinkedHashMap<>(); <--- хотел бы так
 
 
 
@@ -69,7 +69,7 @@ public class Todo {
 //            joinColumns = @JoinColumn(name = "todo_id"))
 //    @MapKeyColumn(name = "user_id")
 //    @Column(name = "role_id")
-//    private Map<User,Role> rolesByUser = new LinkedHashMap<>();
+//    private Map<User,Privilege> rolesByUser = new LinkedHashMap<>();
 
 
 
@@ -105,8 +105,8 @@ public class Todo {
         return users.get(0);
     }
 
-//    public Role getRoleByUser(User user) {
-//        return users.get(user).getRole();
+//    public Privilege getRoleByUser(User user) {
+//        return users.get(user).getPrivilege();
 //    }
 
 }

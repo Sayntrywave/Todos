@@ -2,7 +2,7 @@ package com.korotkov.todo.controller;
 
 import com.korotkov.todo.dto.request.UserEditRequest;
 import com.korotkov.todo.dto.response.UserResponse;
-import com.korotkov.todo.model.Role;
+import com.korotkov.todo.model.Privilege;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.security.JWTUtil;
@@ -66,7 +66,7 @@ public class AdminController {
         //todo modify it pls
         User map = modelMapper.map(userEditRequest, User.class);
         if(userEditRequest.getRole() != null){
-            Role roleByName = roleRepository.getRoleByName(userEditRequest.getRole())
+            Privilege roleByName = roleRepository.getRoleByName(userEditRequest.getRole())
                     .orElseThrow(() -> new BadCredentialsException("not found this role: " + currentUser.getRole()));
             map.setRole(roleByName);
         }

@@ -24,12 +24,12 @@ public class TodoUser {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "role_id",referencedColumnName = "id")
-    private Role role;
+    @JoinColumn(name = "privilege_id",referencedColumnName = "id")
+    private Privilege privilege;
 
-    public TodoUser(Todo todo, User user, Role role) {
+    public TodoUser(Todo todo, User user, Privilege privilege) {
         this.todo = todo;
         this.user = user;
-        this.role = role;
+        this.privilege = privilege;
     }
 }

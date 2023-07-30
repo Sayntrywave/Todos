@@ -1,6 +1,6 @@
 package com.korotkov.todo.model;
 
-public enum RoleAction {
+public enum TodoAction {
     EDIT,
     COMPLETE,
     DELETE

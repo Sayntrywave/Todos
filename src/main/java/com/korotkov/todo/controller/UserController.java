@@ -139,7 +139,7 @@ public class UserController {
 
             userTodoMap.add(user.getTodo(),
                     new UserTodo(modelMapper.map(user.getUser(), UserResponse.class),
-                            user.getRole().getName()));
+                            user.getPrivilege().getName()));
         }
 
         List<TodoResponse> response = new ArrayList<>();
@@ -158,7 +158,7 @@ public class UserController {
 //        List<UserTodo> userResponse = todoUser.getUsers().entrySet().stream().map(entry -> {
 //
 //            UserTodo map = modelMapper.map(entry.getKey(), UserTodo.class);
-//            map.setRole(entry.getValue().getRole().getName());
+//            map.setPrivilege(entry.getValue().getPrivilege().getName());
 //            return map ;
 //        }).toList();
 //        newTodo.setUsers(userResponse);
