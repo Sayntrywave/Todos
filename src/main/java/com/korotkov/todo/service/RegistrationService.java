@@ -4,7 +4,7 @@ package com.korotkov.todo.service;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.UserRepository;
-import com.korotkov.todo.util.UserNotCreatedException;
+import com.korotkov.todo.util.exception.UserNotCreatedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

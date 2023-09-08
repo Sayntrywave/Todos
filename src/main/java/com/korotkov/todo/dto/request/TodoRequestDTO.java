@@ -1,15 +1,13 @@
 package com.korotkov.todo.dto.request;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 //@AllArgsConstructor
 @NoArgsConstructor
-public class TodoRequest {
+public class TodoRequestDTO {
 
     @Size(max = 100,message = "Your can't make title more than 30 symbols. Try shorter :)")
     private String title;

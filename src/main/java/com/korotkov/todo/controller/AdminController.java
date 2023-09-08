@@ -7,10 +7,11 @@ import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.UserService;
-import com.korotkov.todo.util.TodoErrorResponse;
-import com.korotkov.todo.util.UserHasNoRightsException;
-import com.korotkov.todo.util.UserNotCreatedException;
-import com.korotkov.todo.util.UserNotFoundException;
+import com.korotkov.todo.util.errorResponse.TodoErrorResponse;
+import com.korotkov.todo.util.errorResponse.UserErrorResponse;
+import com.korotkov.todo.util.exception.UserHasNoRightsException;
+import com.korotkov.todo.util.exception.UserNotCreatedException;
+import com.korotkov.todo.util.exception.UserNotFoundException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,10 +86,10 @@ public class AdminController {
 //    }
 
     @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(UserHasNoRightsException e)
+    private ResponseEntity<UserErrorResponse> handleException(UserHasNoRightsException e)
     {
-        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.FORBIDDEN);
+        UserErrorResponse userErrorResponse = new UserErrorResponse(e.getMessage());
+        return new ResponseEntity<>(userErrorResponse,HttpStatus.FORBIDDEN);
     }
     @ExceptionHandler
     private ResponseEntity<TodoErrorResponse> handleException(UserNotCreatedException e)
@@ -96,19 +97,8 @@ public class AdminController {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
         return new ResponseEntity<>(todoErrorResponse,HttpStatus.FORBIDDEN);
     }
-    @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(BadCredentialsException e)
-    {
-        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
-    }
 
-    @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(UserNotFoundException e)
-    {
-        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
-    }
+
 
 
 

@@ -2,10 +2,12 @@ package com.korotkov.todo.service;
 
 import com.korotkov.todo.model.*;
 import com.korotkov.todo.repository.RoleRepository;
+import com.korotkov.todo.repository.TodoRequestRepository;
+import com.korotkov.todo.repository.TodoUserRepository;
 import com.korotkov.todo.repository.UserRepository;
 import com.korotkov.todo.security.MyUserDetails;
-import com.korotkov.todo.util.UserHasNoRightsException;
-import com.korotkov.todo.util.UserNotFoundException;
+import com.korotkov.todo.util.exception.UserHasNoRightsException;
+import com.korotkov.todo.util.exception.UserNotFoundException;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -29,15 +31,25 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleRepository roleRepository;
+    private final TodoRequestRepository todoRequestRepository;
+
+    private final TodoUserRepository todoUserRepository;
     private CacheManager cacheManager;
     //roleRepository
     //
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       RoleRepository roleRepository,
+                       TodoRequestRepository todoRequestRepository,
+                       TodoUserRepository todoUserRepository,
+                       CacheManager cacheManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.todoRequestRepository = todoRequestRepository;
+        this.todoUserRepository = todoUserRepository;
         this.cacheManager = cacheManager;
     }
 
@@ -114,6 +126,26 @@ public class UserService {
         }
         save(userToBeUpdated);
         return flag;
+    }
+
+    @Transactional
+    public void acceptTodoRequest(int todo_id, User user, Boolean accepted){
+        if(accepted){
+            TodoRequest optTU = todoRequestRepository.getTodoRequestByUserIdAndTodoId(user.getId(), todo_id).orElseThrow();
+            todoUserRepository.save(new TodoUser(optTU.getTodo(),
+                                                optTU.getUser(),
+                                                optTU.getPrivilege()));
+            todoRequestRepository.delete(optTU);
+        }
+        else {
+            throw new BadCredentialsException("ошибка");
+
+        }
+    }
+
+
+    public List<TodoRequest> getTodoRequests(User user){
+        return todoRequestRepository.findAll();
     }
 
 //    @Transactional

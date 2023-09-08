@@ -6,8 +6,8 @@ import com.korotkov.todo.model.User;
 import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.RegistrationService;
 import com.korotkov.todo.service.UserService;
-import com.korotkov.todo.util.TodoErrorResponse;
-import com.korotkov.todo.util.UserNotCreatedException;
+import com.korotkov.todo.util.errorResponse.TodoErrorResponse;
+import com.korotkov.todo.util.exception.UserNotCreatedException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,16 +100,16 @@ public class AuthController {
 
 
     @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(UserNotCreatedException e)
+    private ResponseEntity<String> handleException(UserNotCreatedException e)
     {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(todoErrorResponse.getMessage(),HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(BadCredentialsException e)
-    {
-        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
-    }
+//    @ExceptionHandler
+//    private ResponseEntity<TodoErrorResponse> handleException(BadCredentialsException e)
+//    {
+//        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
+//        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
+//    }
 }

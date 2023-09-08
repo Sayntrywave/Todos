@@ -1,26 +1,28 @@
 package com.korotkov.todo.controller;
 
 
+import com.korotkov.todo.dto.request.AcceptRequest;
 import com.korotkov.todo.dto.request.TodoUserRequest;
-import com.korotkov.todo.dto.request.TodoRequest;
-import com.korotkov.todo.dto.response.LoginResponse;
-import com.korotkov.todo.dto.response.TodoResponse;
-import com.korotkov.todo.dto.response.UserResponse;
-import com.korotkov.todo.dto.response.UserTodo;
+import com.korotkov.todo.dto.request.TodoRequestDTO;
+import com.korotkov.todo.dto.response.*;
 import com.korotkov.todo.model.Todo;
+import com.korotkov.todo.model.TodoRequest;
 import com.korotkov.todo.model.TodoUser;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.service.TodoService;
 import com.korotkov.todo.service.UserService;
-import com.korotkov.todo.util.TodoErrorResponse;
-import com.korotkov.todo.util.TodoNotCreatedException;
-import com.korotkov.todo.util.TodoNotFoundException;
-import com.korotkov.todo.util.UserHasNoRightsException;
+import com.korotkov.todo.util.errorResponse.TodoErrorResponse;
+import com.korotkov.todo.util.errorResponse.UserErrorResponse;
+import com.korotkov.todo.util.exception.TodoNotCreatedException;
+import com.korotkov.todo.util.exception.TodoNotFoundException;
+import com.korotkov.todo.util.exception.UserHasNoPrivilegeException;
+import com.korotkov.todo.util.exception.UserHasNoRightsException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.util.MultiValueMapAdapter;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -38,9 +40,6 @@ public class UserController {
     private final UserService userService;
     private final TodoService todoService;
     private final ModelMapper modelMapper;
-
-//    @Value("${key-password}")
-//    private String value;
 
     @Autowired
     public UserController(UserService userService, TodoService todoService, ModelMapper modelMapper) {
@@ -65,13 +64,13 @@ public class UserController {
     }
 
     @PostMapping("/todos")
-    public ResponseEntity<TodoResponse> createTodo(@RequestBody @Valid TodoRequest todoRequest,
+    public ResponseEntity<TodoResponse> createTodo(@RequestBody @Valid TodoRequestDTO todoRequestDTO,
                                                    BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new TodoNotCreatedException(bindingResult.getFieldError().getField() + " " + bindingResult.getFieldError().getDefaultMessage());
         }
 
-        Todo todo = modelMapper.map(todoRequest, Todo.class);
+        Todo todo = modelMapper.map(todoRequestDTO, Todo.class);
         User currentUser = userService.getCurrentUser();
         todoService.save(todo, currentUser);
         return new ResponseEntity<>(getTodosResponse(todo, currentUser), HttpStatus.valueOf(201));
@@ -83,18 +82,13 @@ public class UserController {
     }
 
     @PutMapping("/todos/{id}")
-    public HttpStatus updateTodo(@RequestBody @Valid TodoRequest todoRequest,
+    public HttpStatus updateTodo(@RequestBody @Valid TodoRequestDTO todoRequestDTO,
                                  BindingResult bindingResult,
                                  @PathVariable int id) {
-//,
-//                                 @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-//        System.out.println(token);
-        // login password -> db
-        //
         if (bindingResult.hasErrors()) {
             throw new TodoNotCreatedException(bindingResult.getFieldError().getField() + " is empty or null");
         }
-        todoService.update(modelMapper.map(todoRequest, Todo.class), id, userService.getCurrentUser());
+        todoService.update(modelMapper.map(todoRequestDTO, Todo.class), id, userService.getCurrentUser());
         return HttpStatus.NO_CONTENT;
     }
 
@@ -119,6 +113,33 @@ public class UserController {
         User to = userService.findByLogin(userRequest.getLogin());
         todoService.setUser(byId,userRequest.getPrivilege(),from,to);
         return HttpStatus.NO_CONTENT;
+    }
+
+    @PostMapping("/todo/{id}/request")
+    public HttpStatus acceptPrivilege(@RequestBody AcceptRequest accept, @PathVariable int id){
+        if(accept.getAccept() == null){
+            throw new BadCredentialsException("accept can't be null");
+        }
+        userService.acceptTodoRequest(id,userService.getCurrentUser(),accept.getAccept());
+
+        return HttpStatus.OK;
+    }
+
+    @GetMapping("/requests")
+    public ResponseEntity<List<TodoRequestResponse>> getTodoRequests(){
+        User currentUser = userService.getCurrentUser();
+        List<TodoRequest> todoRequests = userService.getTodoRequests(currentUser);
+        return new ResponseEntity<>(getTodoRequestResponse(todoRequests),HttpStatus.OK);
+    }
+
+    private List<TodoRequestResponse> getTodoRequestResponse(List<TodoRequest> todoRequests){
+        List<TodoRequestResponse> responses = new ArrayList<>();
+
+        for (TodoRequest request : todoRequests) {
+            responses.add(new TodoRequestResponse(request));
+        }
+
+        return responses;
     }
 
 
@@ -179,15 +200,22 @@ public class UserController {
 
 
     @ExceptionHandler
-    private ResponseEntity<HttpStatus> handleException(TodoNotFoundException e) {
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    private ResponseEntity<TodoErrorResponse> handleException(TodoNotFoundException e) {
+        TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
+        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(UserHasNoRightsException e) {
+    private ResponseEntity<UserErrorResponse> handleException(UserHasNoRightsException e) {
+        UserErrorResponse userErrorResponse = new UserErrorResponse(e.getMessage());
+        return new ResponseEntity<>(userErrorResponse, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler
+    private ResponseEntity<TodoErrorResponse> handleException(UserHasNoPrivilegeException e) {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
         return new ResponseEntity<>(todoErrorResponse, HttpStatus.BAD_REQUEST);
     }
+
 
     @ExceptionHandler
     private ResponseEntity<TodoErrorResponse> handleException(TodoNotCreatedException e) {
@@ -195,7 +223,4 @@ public class UserController {
         return new ResponseEntity<>(todoErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
-//    private User getCurrentUser(){}
-
-    //todo add exception handler
 }

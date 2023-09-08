@@ -3,20 +3,13 @@ package com.korotkov.todo.service;
 import com.korotkov.todo.model.*;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.TodoRepository;
+import com.korotkov.todo.repository.TodoRequestRepository;
 import com.korotkov.todo.repository.TodoUserRepository;
-import com.korotkov.todo.util.TodoNotCreatedException;
-import com.korotkov.todo.util.TodoNotFoundException;
-import com.korotkov.todo.util.UserHasNoRightsException;
+import com.korotkov.todo.util.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.interceptor.SimpleKey;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,13 +24,20 @@ public class TodoService {
 
     private final RoleRepository roleRepository;
     private final UserService userService;
+    private TodoRequestRepository todoRequestRepository;
 
     @Autowired
-    public TodoService(TodoUserRepository todoUserRepository, TodoRepository todoRepository, RoleRepository roleRepository, UserService userService, CacheManager cacheManager) {
+    public TodoService(TodoUserRepository todoUserRepository,
+                       TodoRepository todoRepository,
+                       RoleRepository roleRepository,
+                       UserService userService,
+                       TodoRequestRepository todoRequestRepository,
+                       CacheManager cacheManager) {
         this.todoUserRepository = todoUserRepository;
         this.todoRepository = todoRepository;
         this.roleRepository = roleRepository;
         this.userService = userService;
+        this.todoRequestRepository = todoRequestRepository;
         this.cacheManager = cacheManager;
     }
 
@@ -127,7 +127,7 @@ public class TodoService {
 
         Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(currUserId,id);
 
-        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getPrivilege();
+        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new TodoBadCredentialException("this user isn't related with this todo")).getPrivilege();
 
         //check rights
         // c || a && b
@@ -151,7 +151,7 @@ public class TodoService {
             }
             save(todoById, creatorTodo); //save
         } else {
-            throw new UserHasNoRightsException("you don't have privilege of todoAction " + todoAction);
+            throw new UserHasNoPrivilegeException("you don't have privilege of todoAction " + todoAction);
         }
     }
 
@@ -168,17 +168,18 @@ public class TodoService {
                             todoUserRepository.deleteByUserId(to.getId());
                         }
                         else {
-                            TodoUser todoUser2;
                             Optional<TodoUser> tu = todoUserRepository.getTodoUserByUserIdAndTodoId(to.getId(), todo.getId());
                             if(tu.isPresent()){
-                                todoUser2 = tu.get();
+                                TodoUser todoUser2 = tu.get();
                                 todoUser2.setPrivilege(role);
+                                todoUserRepository.save(todoUser2);
+                                cacheManager.getCache("todos").evict(new SimpleKey());
                             }
                             else {
-                                todoUser2 = new TodoUser(todo, to, role);
+                                TodoRequest todoRequest = new TodoRequest(todo, to, role);
+                                todoRequestRepository.save(todoRequest);
                             }
-                            todoUserRepository.save(todoUser2);
-                            cacheManager.getCache("todos").evict(new SimpleKey());
+//                            cacheManager.getCache("todos").evict(new SimpleKey());
                         }
                     }
                 })
@@ -198,7 +199,7 @@ public class TodoService {
     public void delete(User updatedBy,int id) {
         Optional<TodoUser> todoUserByUserIdAndTodoId = todoUserRepository.getTodoUserByUserIdAndTodoId(updatedBy.getId(),id);
 
-        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new BadCredentialsException("this user isn't related with this todo")).getPrivilege();
+        Privilege privilege = todoUserByUserIdAndTodoId.orElseThrow(() -> new TodoBadCredentialException("this user isn't related with this todo")).getPrivilege();
 
 
         TodoAction todoAction = TodoAction.DELETE;
@@ -208,7 +209,7 @@ public class TodoService {
 
         }
         else {
-            throw new UserHasNoRightsException("you don't have privilege of todoAction " + todoAction);
+            throw new UserHasNoPrivilegeException("you don't have privilege of todoAction " + todoAction);
         }
     }
 

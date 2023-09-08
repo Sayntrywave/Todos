@@ -1,0 +1,9 @@
+server:
+  port: 8080
+  ssl:
+    enabled: true
+    key-alias: skipper
+    key-store: classpath:skipper.keystore
+    key-store-type: jks
+    key-store-password: skipper
+    key-password: skipper
