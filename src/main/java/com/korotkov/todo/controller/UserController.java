@@ -2,8 +2,8 @@ package com.korotkov.todo.controller;
 
 
 import com.korotkov.todo.dto.request.AcceptRequest;
-import com.korotkov.todo.dto.request.TodoUserRequest;
 import com.korotkov.todo.dto.request.TodoRequestDTO;
+import com.korotkov.todo.dto.request.TodoUserRequest;
 import com.korotkov.todo.dto.response.*;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.model.TodoRequest;
@@ -52,14 +52,25 @@ public class UserController {
     @GetMapping("/me")
     public LoginResponse getInfo() {
         LoginResponse map = modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
-        map.setRole("ADMIN");
+//        map.setRole("ADMIN");
         return map;
+    }
+
+    @GetMapping("/todos-count")
+    public ResponseEntity<Map<String, Long>> getTodosCount(@RequestParam(value = "q", required = false) String query){
+        return new ResponseEntity<>(Map.of("count",todoService.getCount(userService.getCurrentUser().getId(),query)),HttpStatus.OK);
     }
 
 
     @GetMapping("/todos")
-    public ResponseEntity<List<TodoResponse>> getTodos() {
-        List<TodoUser> todos = todoService.getTodoUser();
+    public ResponseEntity<List<TodoResponse>> getTodos(
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "sort", required = false, defaultValue = "id") String sort,
+            @RequestParam(value = "q", required = false) String query) {
+
+        User currentUser = userService.getCurrentUser();
+        List<TodoUser> todos = todoService.getTodoUser(currentUser.getId(),page - 1,limit,sort,query);
         return new ResponseEntity<>(getTodosResponse(todos), HttpStatus.OK);
     }
 
@@ -94,7 +105,7 @@ public class UserController {
 
     @DeleteMapping("/todos/{id}")
     public HttpStatus deleteTodo(@PathVariable int id) {
-        todoService.delete(userService.getCurrentUser(),id);
+        todoService.delete(userService.getCurrentUser(), id);
         return HttpStatus.NO_CONTENT;
     }
 
@@ -102,37 +113,37 @@ public class UserController {
     @PutMapping("/todo/{id}/privileges")
     public HttpStatus setPrivileges(@RequestBody @Valid TodoUserRequest userRequest,
                                     BindingResult bindingResult,
-                                    @PathVariable int id){
+                                    @PathVariable int id) {
 
-        if (bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             //todo exception handling
         }
         Todo byId = todoService.getById(id);
 
         User from = userService.getCurrentUser();
         User to = userService.findByLogin(userRequest.getLogin());
-        todoService.setUser(byId,userRequest.getPrivilege(),from,to);
+        todoService.setUser(byId, userRequest.getPrivilege(), from, to);
         return HttpStatus.NO_CONTENT;
     }
 
     @PostMapping("/todo/{id}/request")
-    public HttpStatus acceptPrivilege(@RequestBody AcceptRequest accept, @PathVariable int id){
-        if(accept.getAccept() == null){
+    public HttpStatus acceptPrivilege(@RequestBody AcceptRequest accept, @PathVariable int id) {
+        if (accept.getAccept() == null) {
             throw new BadCredentialsException("accept can't be null");
         }
-        userService.acceptTodoRequest(id,userService.getCurrentUser(),accept.getAccept());
+        userService.acceptTodoRequest(id, userService.getCurrentUser(), accept.getAccept());
 
         return HttpStatus.OK;
     }
 
     @GetMapping("/requests")
-    public ResponseEntity<List<TodoRequestResponse>> getTodoRequests(){
+    public ResponseEntity<List<TodoRequestResponse>> getTodoRequests() {
         User currentUser = userService.getCurrentUser();
         List<TodoRequest> todoRequests = userService.getTodoRequests(currentUser);
-        return new ResponseEntity<>(getTodoRequestResponse(todoRequests),HttpStatus.OK);
+        return new ResponseEntity<>(getTodoRequestResponse(todoRequests), HttpStatus.OK);
     }
 
-    private List<TodoRequestResponse> getTodoRequestResponse(List<TodoRequest> todoRequests){
+    private List<TodoRequestResponse> getTodoRequestResponse(List<TodoRequest> todoRequests) {
         List<TodoRequestResponse> responses = new ArrayList<>();
 
         for (TodoRequest request : todoRequests) {
@@ -152,10 +163,11 @@ public class UserController {
         newTodo.setUsers(userResponse);
         return newTodo;
     }
+
     private List<TodoResponse> getTodosResponse(List<TodoUser> todoUser) {
 //        MultiMap<Todo, UserTodo> userTodoMap = new MultiMap<>();
 
-        MultiValueMapAdapter<Todo,UserTodo> userTodoMap = new MultiValueMapAdapter<>(new HashMap<>());
+        MultiValueMapAdapter<Todo, UserTodo> userTodoMap = new MultiValueMapAdapter<>(new HashMap<>());
         for (TodoUser user : todoUser) {
 
             userTodoMap.add(user.getTodo(),
@@ -202,7 +214,7 @@ public class UserController {
     @ExceptionHandler
     private ResponseEntity<TodoErrorResponse> handleException(TodoNotFoundException e) {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(todoErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
@@ -210,6 +222,7 @@ public class UserController {
         UserErrorResponse userErrorResponse = new UserErrorResponse(e.getMessage());
         return new ResponseEntity<>(userErrorResponse, HttpStatus.BAD_REQUEST);
     }
+
     @ExceptionHandler
     private ResponseEntity<TodoErrorResponse> handleException(UserHasNoPrivilegeException e) {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());

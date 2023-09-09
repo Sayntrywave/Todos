@@ -38,7 +38,7 @@ public class Todo {
 //            joinColumns = @JoinColumn(name = "todo_id"),
 //            inverseJoinColumns = @JoinColumn(name = "role_id"))
 
-//    @ElementCollection
+    //    @ElementCollection
 //    @CollectionTable(name = "todos_users",
 //    joinColumns = @JoinColumn(name = "todo_id"))
 ////    @JoinColumn(name = "")
@@ -52,11 +52,15 @@ public class Todo {
 //    @MapKeyJoinColumn(name = "")
 //    @MapKeyJoinColumn(name = "user_id")
 //    @JoinColumn(name = "role_id")
+
     @OneToMany(targetEntity = User.class)
     @JoinTable(name = "todos_users",
                 joinColumns = @JoinColumn(name = "todo_id"),
                 inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private List<User> users = new ArrayList<>();
+    public List<User> getUsers() {
+        return users;
+    }
 
     //todo разобраться как работает jointable под копотом
 //    private Map<User,Privilege> users = new LinkedHashMap<>(); <--- хотел бы так

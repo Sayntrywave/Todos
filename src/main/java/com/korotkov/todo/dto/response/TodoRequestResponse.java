@@ -8,14 +8,18 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class TodoRequestResponse {
+
+    int todoId;
     String todoTitle;
 //    String userLogin;
     //timestamp
     String userPrivilege;
 
     public TodoRequestResponse(TodoRequest request) {
+        this.todoId = request.getTodo().getId();
         this.todoTitle = request.getTodo().getTitle();
 //        this.userLogin = request.getUser().getLogin();
+
         this.userPrivilege = request.getPrivilege().getName();
     }
 }

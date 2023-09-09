@@ -54,7 +54,7 @@ public class UserService {
     }
 
 
-    @Cacheable("users")
+//    @Cacheable("users")
     public List<User> getListOfUsers() {
 
         return userRepository.findAll();
@@ -77,7 +77,7 @@ public class UserService {
 
 
         Boolean isInBan = user.getIsInBan();
-        Privilege roleAsEntity = user.getRoleAsEntity();
+        Role roleAsEntity = user.getRoleAsEntity();
         if(color != null && !color.isEmpty() || roleAsEntity != null || isInBan != null){
             //todo check roles
             if(!currentUser.hasRightsToChange()){
@@ -130,22 +130,20 @@ public class UserService {
 
     @Transactional
     public void acceptTodoRequest(int todo_id, User user, Boolean accepted){
+        TodoRequest optTU = todoRequestRepository.getTodoRequestByUserIdAndTodoId(user.getId(), todo_id).orElseThrow();
         if(accepted){
-            TodoRequest optTU = todoRequestRepository.getTodoRequestByUserIdAndTodoId(user.getId(), todo_id).orElseThrow();
             todoUserRepository.save(new TodoUser(optTU.getTodo(),
                                                 optTU.getUser(),
                                                 optTU.getPrivilege()));
-            todoRequestRepository.delete(optTU);
+            cacheManager.getCache("todos").evict(new SimpleKey());
         }
-        else {
-            throw new BadCredentialsException("ошибка");
+        todoRequestRepository.delete(optTU);
 
-        }
     }
 
 
     public List<TodoRequest> getTodoRequests(User user){
-        return todoRequestRepository.findAll();
+        return todoRequestRepository.getTodoRequestByUserId(user.getId());
     }
 
 //    @Transactional

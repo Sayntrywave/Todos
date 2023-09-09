@@ -1,11 +1,14 @@
 package com.korotkov.todo.service;
 
 
+import com.github.javafaker.Faker;
+import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.UserRepository;
 import com.korotkov.todo.util.exception.UserNotCreatedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,9 @@ public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleRepository roleRepository;
+
+    @Value("${default_pass}")
+    private String pass;
 
     @Autowired
     public RegistrationService(UserRepository repository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
@@ -39,5 +45,17 @@ public class RegistrationService {
         user.setIsInBan(false);
         repository.save(user);
 
+    }
+
+    @Transactional
+    public void register(int count){
+        Faker faker = new Faker();
+        User user;
+        for (int i = 0; i < count; i++) {
+            user = new User();
+            user.setLogin(faker.name().username());
+            user.setPassword(pass);
+            register(user);
+        }
     }
 }

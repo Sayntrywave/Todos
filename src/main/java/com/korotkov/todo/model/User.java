@@ -32,7 +32,7 @@ public class User {
     @ManyToOne
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Privilege role;
+    private Role role;
 //    @Column(name = "role")
 
     @OneToMany
@@ -49,14 +49,14 @@ public class User {
     private Boolean isInBan;
 
 
-    public User(String name, String login, String password, Privilege role) {
+    public User(String name, String login, String password, Role role) {
         this.name = name;
         this.login = login;
         this.password = password;
         this.role = role;
     }
 
-    public User(String login, String password, Privilege role) {
+    public User(String login, String password, Role role) {
         this.login = login;
         this.password = password;
         this.role = role;
@@ -70,7 +70,7 @@ public class User {
 //    public void setPrivilege(String role) {
 //        this.role = new Privilege(role);
 //    }
-    public void setRole(Privilege role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
@@ -79,7 +79,7 @@ public class User {
         return role.getName();
     }
 
-    public Privilege getRoleAsEntity(){
+    public Role getRoleAsEntity(){
         return role;
     }
 

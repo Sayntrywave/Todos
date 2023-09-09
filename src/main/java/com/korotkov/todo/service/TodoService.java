@@ -1,19 +1,20 @@
 package com.korotkov.todo.service;
 
+import com.github.javafaker.Faker;
 import com.korotkov.todo.model.*;
-import com.korotkov.todo.repository.RoleRepository;
-import com.korotkov.todo.repository.TodoRepository;
-import com.korotkov.todo.repository.TodoRequestRepository;
-import com.korotkov.todo.repository.TodoUserRepository;
+import com.korotkov.todo.repository.*;
 import com.korotkov.todo.util.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.data.domain.*;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,20 +23,22 @@ public class TodoService {
     private final TodoUserRepository todoUserRepository;
     private final TodoRepository todoRepository;
 
-    private final RoleRepository roleRepository;
+//    private final RoleRepository roleRepository;
+    private final PrivilegeRepository privilegeRepository;
     private final UserService userService;
     private TodoRequestRepository todoRequestRepository;
+    private final CacheManager cacheManager;
+
 
     @Autowired
     public TodoService(TodoUserRepository todoUserRepository,
                        TodoRepository todoRepository,
-                       RoleRepository roleRepository,
-                       UserService userService,
+                       PrivilegeRepository privilegeRepository, UserService userService,
                        TodoRequestRepository todoRequestRepository,
                        CacheManager cacheManager) {
         this.todoUserRepository = todoUserRepository;
         this.todoRepository = todoRepository;
-        this.roleRepository = roleRepository;
+        this.privilegeRepository = privilegeRepository;
         this.userService = userService;
         this.todoRequestRepository = todoRequestRepository;
         this.cacheManager = cacheManager;
@@ -48,6 +51,13 @@ public class TodoService {
             return todoRepository.getReferenceById(id);
         }
         throw new TodoNotFoundException();
+    }
+
+    public long getCount(int user_id, String query){
+        if(query != null){
+            return todoUserRepository.countTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(user_id,query);
+        }
+        return todoUserRepository.countTodoUsersByUserId(user_id);
     }
 
     public List<TodoUser> getByIdTodoUser(int id) {
@@ -63,16 +73,45 @@ public class TodoService {
         return todoRepository.findAll();
     }
 
+//    @Cacheable(value = "todos")
+    public List<TodoUser> getTodoUser(int userId, int page, int size, String sort, String query) {
+//        if (query != null){
+//            return todoUserRepository.getTodoUsersByUserId();
+//        }
+        List<TodoUser> collect;
 
-    @Cacheable(value = "todos")
-    public List<TodoUser> getTodoUser() {
-//        System.out.println(cacheManager.getCache("users"));
+        if (query != null){
+            collect = todoUserRepository.
+                    getTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(
+                            userId,
+                            query,
+                            PageRequest.of(page, size, Sort.by(sort).descending()))
+                    .get()
+                    .collect(Collectors.toList());
+            return collect;
+        }
+        else {
+            collect = todoUserRepository.
+                    getTodoUsersByUserId(
+                            userId,
+                            PageRequest.of(page,size,Sort.by(sort).descending()))
+                    .get()
+                    .collect(Collectors.toList());
+        }
 
-        List<TodoUser> todoUserList = todoUserRepository.findAll();
-//        new ConcurrentMapCache("users",)
-        return todoUserList;
+        int size1 = collect.size();
+        for (int i = 0; i < size1; i++) {
+            TodoUser todoUser = collect.get(i);
+            List<TodoUser> todoUsersByTodoId = todoUserRepository.getTodoUsersByTodoId(todoUser.getTodo().getId());
+
+            for (TodoUser user : todoUsersByTodoId) {
+                if (user.getId() != todoUser.getId()) {
+                    collect.add(user);
+                }
+            }
+        }
+        return collect;
     }
-    private final CacheManager cacheManager;
 
     public Map<User, Privilege> getUserAndTheirRoles() {
         List<TodoUser> todoUserList = todoUserRepository.findAll();
@@ -82,6 +121,23 @@ public class TodoService {
 
         return result;
     }
+
+
+    @Transactional
+    public void createTodosForAllUsers(int count){
+        Todo todo;
+        Faker faker = new Faker();
+        for (User user : userService.getListOfUsers()) {
+            for (int i = 0; i < count; i++) {
+                todo = new Todo();
+                todo.setTitle(faker.name().name());
+                todo.setDescription(faker.friends().quote());
+                save(todo,user);
+            }
+        }
+    }
+
+
     @Transactional
     public void save(Todo todo, User creator) {
 
@@ -95,21 +151,21 @@ public class TodoService {
         todoRepository.save(todo);
 //        Cache users = cacheManager.getCache("users").;
         if (todo.getCreator() == null) {
-            roleRepository.getRoleByName("CREATOR").ifPresent(role -> todoUserRepository.save(new TodoUser(todo, creator, role)));
+            privilegeRepository.getPrivilegeByName("CREATOR").ifPresent(role -> todoUserRepository.save(new TodoUser(todo, creator, role)));
         }
     }
 //    @CachePut("users")
 
-    @Transactional
-    public void save(Todo todo) {
-        String title = todo.getTitle();
-        int id = todo.getId();
-        if (todoRepository.existsTodoByTitleAndIdIsNot(title, id)) {
-            throw new TodoNotCreatedException("title <" + title + "> isn't unique");
-        }
-
-        todoRepository.save(todo);
-    }
+//    @Transactional
+//    public void save(Todo todo) {
+//        String title = todo.getTitle();
+//        int id = todo.getId();
+//        if (todoRepository.existsTodoByTitleAndIdIsNot(title, id)) {
+//            throw new TodoNotCreatedException("title <" + title + "> isn't unique");
+//        }
+//
+//        todoRepository.save(todo);
+//    }
 
     @Transactional
     public void update(Todo todo, int id, User currentUser) {
@@ -160,7 +216,7 @@ public class TodoService {
     public void setUser(Todo todo, String privilege, User from, User to) {
         privilege = privilege.toUpperCase();
         String finalPrivilege = privilege;
-        roleRepository.getRoleByName(privilege).ifPresent(role ->
+        privilegeRepository.getPrivilegeByName(privilege).ifPresent(role ->
                 todoUserRepository.getTodoUserByUserIdAndTodoId(from.getId(), todo.getId()).ifPresent(todoUser -> {
                     Privilege privilege1 = todoUser.getPrivilege();
                     if (Privilege.canSetPrivilege(privilege1, role)) {
@@ -168,6 +224,10 @@ public class TodoService {
                             todoUserRepository.deleteByUserId(to.getId());
                         }
                         else {
+
+                            if(todoRequestRepository.existsByUserIdAndTodoId(to.getId(), todo.getId())){
+                                throw new BadCredentialsException("can't create request, bc user has one with this todo");
+                            };
                             Optional<TodoUser> tu = todoUserRepository.getTodoUserByUserIdAndTodoId(to.getId(), todo.getId());
                             if(tu.isPresent()){
                                 TodoUser todoUser2 = tu.get();
