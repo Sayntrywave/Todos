@@ -33,7 +33,6 @@ public class User {
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Role role;
-//    @Column(name = "role")
 
     @OneToMany
     @JoinTable(name = "todos_users",
@@ -62,12 +61,12 @@ public class User {
         this.role = role;
     }
 
-    public void makeBan(){
+    public void makeBan() {
         isInBan = !isInBan;
     }
 
 
-//    public void setPrivilege(String role) {
+    //    public void setPrivilege(String role) {
 //        this.role = new Privilege(role);
 //    }
     public void setRole(Role role) {
@@ -79,12 +78,12 @@ public class User {
         return role.getName();
     }
 
-    public Role getRoleAsEntity(){
+    public Role getRoleAsEntity() {
         return role;
     }
 
 
-    public boolean hasRightsToChange(){
+    public boolean hasRightsToChange() {
         return role.getName().equals("ADMIN");
     }
 

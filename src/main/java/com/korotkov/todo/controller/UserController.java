@@ -52,13 +52,12 @@ public class UserController {
     @GetMapping("/me")
     public LoginResponse getInfo() {
         LoginResponse map = modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
-//        map.setRole("ADMIN");
         return map;
     }
 
     @GetMapping("/todos-count")
-    public ResponseEntity<Map<String, Long>> getTodosCount(@RequestParam(value = "q", required = false) String query){
-        return new ResponseEntity<>(Map.of("count",todoService.getCount(userService.getCurrentUser().getId(),query)),HttpStatus.OK);
+    public ResponseEntity<Map<String, Long>> getTodosCount(@RequestParam(value = "q", required = false) String query) {
+        return new ResponseEntity<>(Map.of("count", todoService.getCount(userService.getCurrentUser().getId(), query)), HttpStatus.OK);
     }
 
 
@@ -70,7 +69,7 @@ public class UserController {
             @RequestParam(value = "q", required = false) String query) {
 
         User currentUser = userService.getCurrentUser();
-        List<TodoUser> todos = todoService.getTodoUser(currentUser.getId(),page - 1,limit,sort,query);
+        List<TodoUser> todos = todoService.getTodoUser(currentUser.getId(), page - 1, limit, sort, query);
         return new ResponseEntity<>(getTodosResponse(todos), HttpStatus.OK);
     }
 
@@ -176,25 +175,14 @@ public class UserController {
         }
 
         List<TodoResponse> response = new ArrayList<>();
-//
-//        for (Map.Entry<Todo, UserTodo> entry : userTodoMap.entrySet()) {
-//            response.add(new TodoResponse(entry.getKey(),e));
-//        }
+
         for (Map.Entry<Todo, List<UserTodo>> entry : userTodoMap.entrySet()) {
 
             TodoResponse todoResponse = modelMapper.map(entry.getKey(), TodoResponse.class);
             todoResponse.setUsers(entry.getValue());
             response.add(todoResponse);
         }
-//
-//        TodoResponse newTodo = modelMapper.map(todoUser.getTodo(), TodoResponse.class);
-//        List<UserTodo> userResponse = todoUser.getUsers().entrySet().stream().map(entry -> {
-//
-//            UserTodo map = modelMapper.map(entry.getKey(), UserTodo.class);
-//            map.setPrivilege(entry.getValue().getPrivilege().getName());
-//            return map ;
-//        }).toList();
-//        newTodo.setUsers(userResponse);
+
         return response;
     }
 
@@ -205,8 +193,6 @@ public class UserController {
 
     @GetMapping("/test")
     public String test() {
-//        System.out.println(value);
-//        System.out.println(ManagementFactory.getRuntimeMXBean().getInputArguments());
         return "test message";
     }
 

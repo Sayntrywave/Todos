@@ -16,14 +16,14 @@ public class TodoRequest {
     private int id;
 
     @ManyToOne
-    @JoinColumn(name = "todo_id",referencedColumnName = "id")
+    @JoinColumn(name = "todo_id", referencedColumnName = "id")
     private Todo todo;
     @ManyToOne
-    @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "privilege_id",referencedColumnName = "id")
+    @JoinColumn(name = "privilege_id", referencedColumnName = "id")
     private Privilege privilege;
 
     public TodoRequest(Todo todo, User user, Privilege privilege) {

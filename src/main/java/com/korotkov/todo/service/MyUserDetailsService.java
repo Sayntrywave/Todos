@@ -27,7 +27,7 @@ public class MyUserDetailsService implements UserDetailsService {
         Optional<User> user = repository.findUserByLogin(login);
 
 
-        if (user.isEmpty()){
+        if (user.isEmpty()) {
             throw new UsernameNotFoundException("user not found");
         }
 

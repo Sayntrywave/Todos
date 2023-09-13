@@ -1,4 +1,5 @@
 package com.korotkov.todo.model;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,10 +25,11 @@ public class Privilege {
         String roleInString = role.getName().toUpperCase();
         return toRole.getId() > role.getId() && (roleInString.equals("CREATOR") || roleInString.equals("OWNER"));
     }
+
     public static boolean canEditTodo(Privilege role, TodoAction todoAction) {
         String roleInString = role.getName().toUpperCase();
         boolean b = roleInString.equals("CREATOR") || roleInString.equals("OWNER");
-        if (todoAction.equals(TodoAction.EDIT)){
+        if (todoAction.equals(TodoAction.EDIT)) {
             return b || roleInString.equals("MODERATOR");
         }
         return b;

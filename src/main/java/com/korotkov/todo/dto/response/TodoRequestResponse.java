@@ -11,8 +11,6 @@ public class TodoRequestResponse {
 
     int todoId;
     String todoTitle;
-//    String userLogin;
-    //timestamp
     String userPrivilege;
 
     public TodoRequestResponse(TodoRequest request) {

@@ -5,7 +5,6 @@ import com.korotkov.todo.dto.response.UserResponse;
 import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
-import com.korotkov.todo.repository.TodoRepository;
 import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.RegistrationService;
 import com.korotkov.todo.service.TodoService;
@@ -105,11 +104,6 @@ public class AdminController {
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-//    @PutMapping("/ban/{id}")
-//    public HttpStatus banUser(@PathVariable("id") int id){
-//        userService.makeBannedById(id,userService.getCurrentUser());
-//        return HttpStatus.OK;
-//    }
 
     @ExceptionHandler
     private ResponseEntity<UserErrorResponse> handleException(UserHasNoRightsException e) {

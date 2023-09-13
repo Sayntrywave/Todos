@@ -8,30 +8,29 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public interface TodoUserRepository extends JpaRepository<TodoUser,Integer> {
+public interface TodoUserRepository extends JpaRepository<TodoUser, Integer> {
     List<TodoUser> getTodoUsersByTodoId(int id);
-    Optional<TodoUser> getTodoUserByUserIdAndTodoId(int userId,int todoId);
-//    List<TodoUser> getTodoUsersByUserId(int id);
+
+    Optional<TodoUser> getTodoUserByUserIdAndTodoId(int userId, int todoId);
+
     List<TodoUser> getTodoUsersByPrivilegeId(int id);
 
     Page<TodoUser> getTodoUsersByUserId(int id, Pageable pageable);
+
     Page<TodoUser> getTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(int id, String title, Pageable pageable);
 
 
-//    List<TodoUser> getTodoUsersByUserId(int id);
 
-    boolean existsByUserIdAndTodoId(int userId,int todoId);
+    boolean existsByUserIdAndTodoId(int userId, int todoId);
 
     long countTodoUsersByUserId(int id);
+
     long countTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(int id, String title);
 
 
-
-//    List<TodoUser>
 
     void deleteByUserId(int id);
 }

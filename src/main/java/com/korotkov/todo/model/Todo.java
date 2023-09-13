@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "todos")
@@ -23,63 +24,21 @@ public class Todo {
     @Column(name = "description")
     private String description;
 
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", referencedColumnName = "id")
-//    private User createdBy;
-
     @Column(name = "is_completed")
     private Boolean isCompleted;
 
     @Column(name = "time_spent")
     private Integer timeSpent;
 
-//    @OneToMany
-//    @JoinTable(name = "todos_users",
-//            joinColumns = @JoinColumn(name = "todo_id"),
-//            inverseJoinColumns = @JoinColumn(name = "role_id"))
-
-    //    @ElementCollection
-//    @CollectionTable(name = "todos_users",
-//    joinColumns = @JoinColumn(name = "todo_id"))
-////    @JoinColumn(name = "")
-//    @MapKeyColumn(name = "user_id")
-//    @Column(name = "role_id")
-//    @OneToMany
-//    @MapKeyJoinColumn(name = "")
-//    @Column(name = "role_id")
-//    @MapKey(name = "user")
-//    @JoinColumn(name = "role_id")
-//    @MapKeyJoinColumn(name = "")
-//    @MapKeyJoinColumn(name = "user_id")
-//    @JoinColumn(name = "role_id")
-
     @OneToMany(targetEntity = User.class)
     @JoinTable(name = "todos_users",
-                joinColumns = @JoinColumn(name = "todo_id"),
-                inverseJoinColumns = {@JoinColumn(name = "user_id")})
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = {@JoinColumn(name = "user_id")})
     private List<User> users = new ArrayList<>();
+
     public List<User> getUsers() {
         return users;
     }
-
-    //todo разобраться как работает jointable под копотом
-//    private Map<User,Privilege> users = new LinkedHashMap<>(); <--- хотел бы так
-
-
-
-    //    private Map<User,TodoUser> users = new LinkedHashMap<>();
-//    @ElementCollection
-//    @CollectionTable(name = "todos_users",
-//            joinColumns = @JoinColumn(name = "todo_id"))
-//    @MapKeyColumn(name = "user_id")
-//    @Column(name = "role_id")
-//    private Map<User,Privilege> rolesByUser = new LinkedHashMap<>();
-
-
-
-//    private List<TodoUser> users = new ArrayList<>();
-//    @MapKey(name = "User")
-
 
 
     public Todo(String title, String description) {
@@ -95,22 +54,13 @@ public class Todo {
                 '}';
     }
 
-    public void setUser(){
-
-    }
-
-
     public User getCreator() {
-        if (users.isEmpty()){
+        if (users.isEmpty()) {
             return null;
         }
-//        return users.get(0).getUser();
         //by default creator is on the 1st index
         return users.get(0);
     }
 
-//    public Privilege getRoleByUser(User user) {
-//        return users.get(user).getPrivilege();
-//    }
 
 }

@@ -2,7 +2,6 @@ package com.korotkov.todo.service;
 
 
 import com.github.javafaker.Faker;
-import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.UserRepository;
@@ -33,10 +32,10 @@ public class RegistrationService {
     }
 
     @Transactional
-    public void register(User user){
+    public void register(User user) {
         //todo check unique
         String login = user.getLogin();
-        if(repository.existsUserByLogin(login)){
+        if (repository.existsUserByLogin(login)) {
             throw new UserNotCreatedException("login <" + login + "> has already been taken");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -48,7 +47,7 @@ public class RegistrationService {
     }
 
     @Transactional
-    public void register(int count){
+    public void register(int count) {
         Faker faker = new Faker();
         User user;
         for (int i = 0; i < count; i++) {
