@@ -1,16 +1,16 @@
 services:
   app:
-    image: syantrywave/todo-app:1.1.4
+    image: syantrywave/todo-app:1.3.0
     env_file:
       - .env
     restart: always
-#    environment:
-#      - JAVA_OPTS='-XX:+UseSerialGC'
-#      JAVA_OPTS:
-#        -XX:+UseSerialGC
-#        -Xss512k
-#        -XX:MaxRAM=72m
-#java -XX:+UseSerialGC -Xss512k -XX:MaxRAM=72m
+    #    environment:
+    #      - JAVA_OPTS='-XX:+UseSerialGC'
+    #      JAVA_OPTS:
+    #        -XX:+UseSerialGC
+    #        -Xss512k
+    #        -XX:MaxRAM=72m
+    #java -XX:+UseSerialGC -Xss512k -XX:MaxRAM=72m
     depends_on:
       - todo_db
     ports:
@@ -23,7 +23,7 @@ services:
     image: postgres
     env_file:
       - db.env
-#    restart: always
+    #    restart: always
     ports:
       - "5422:5432"
     environment:

@@ -6,8 +6,9 @@ import com.korotkov.todo.model.User;
 import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.RegistrationService;
 import com.korotkov.todo.service.UserService;
-import com.korotkov.todo.util.TodoErrorResponse;
-import com.korotkov.todo.util.UserNotCreatedException;
+import com.korotkov.todo.util.errorResponse.AuthErrorResponse;
+import com.korotkov.todo.util.errorResponse.TodoErrorResponse;
+import com.korotkov.todo.util.exception.UserNotCreatedException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.util.Map;
 
 @CrossOrigin
@@ -41,37 +43,38 @@ public class AuthController {
     }
 
     @GetMapping("/hello")
-    public String printHello(){
+    public String printHello() {
         return "Hello";
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String,String>> registration(@RequestBody @Valid RegistrationRequest user,
-                                   BindingResult bindingResult){
-        if(bindingResult.hasErrors()){
+    public ResponseEntity<Map<String, String>> registration(@RequestBody @Valid RegistrationRequest user,
+                                                            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
             throw new UserNotCreatedException(bindingResult.getFieldError().getDefaultMessage());
         }
 
-        registrationService.register(modelMapper.map(user,User.class));
+        registrationService.register(modelMapper.map(user, User.class));
 
         User currentUser = userService.findByLogin(user.getLogin());
 
         String token = jwtUtil.generateToken(user.getLogin());
 
 
-
-        return new ResponseEntity<>(Map.of("jwt-token", token,
+        return new ResponseEntity<>(Map.of("token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
                 "login", currentUser.getLogin(),
-                    "color", currentUser.getColor()),
+                "color", currentUser.getColor()),
                 HttpStatus.OK);
     }
+
     @PostMapping("/login")
-    public ResponseEntity<Map<String,String>> login (@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult){
-        if(bindingResult.hasErrors()){
+    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
             throw new BadCredentialsException(bindingResult.getFieldError().getDefaultMessage());
         }
+
 
         UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getLogin(),
@@ -84,7 +87,10 @@ public class AuthController {
         User currentUser = userService.findByLogin(authenticationRequest.getLogin());
 
         String token = jwtUtil.generateToken(authenticationRequest.getLogin());
-        return new ResponseEntity<>(Map.of("jwt-token", token,
+
+
+        //todo make id as int
+        return new ResponseEntity<>(Map.of("token", token,
                 "id", String.valueOf(currentUser.getId()),
                 "role", currentUser.getRole(),
                 "login", currentUser.getLogin(),
@@ -94,16 +100,21 @@ public class AuthController {
 
 
     @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(UserNotCreatedException e)
-    {
+    private ResponseEntity<String> handleException(UserNotCreatedException e) {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(todoErrorResponse.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    private ResponseEntity<TodoErrorResponse> handleException(BadCredentialsException e)
-    {
+    private ResponseEntity<String> handleException(AuthenticationException e) {
         TodoErrorResponse todoErrorResponse = new TodoErrorResponse(e.getMessage());
-        return new ResponseEntity<>(todoErrorResponse,HttpStatus.BAD_REQUEST);
+        System.out.println(e.getMessage());
+        return new ResponseEntity<>(todoErrorResponse.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    private ResponseEntity<AuthErrorResponse> handleException(BadCredentialsException e) {
+        AuthErrorResponse todoErrorResponse = new AuthErrorResponse(e.getMessage());
+        return new ResponseEntity<>(todoErrorResponse, HttpStatus.BAD_REQUEST);
     }
 }

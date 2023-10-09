@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "todos")
 @Data
@@ -21,28 +24,27 @@ public class Todo {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User createdBy;
-
     @Column(name = "is_completed")
     private Boolean isCompleted;
 
     @Column(name = "time_spent")
     private Integer timeSpent;
 
+    @OneToMany(targetEntity = User.class)
+    @JoinTable(name = "todos_users",
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = {@JoinColumn(name = "user_id")})
+    private List<User> users = new ArrayList<>();
 
+    public List<User> getUsers() {
+        return users;
+    }
 
 
     public Todo(String title, String description) {
-        this.title = title;
-        this.description = description;
-    }
 
-    public Todo(String title, String description, User createdBy) {
         this.title = title;
         this.description = description;
-        this.createdBy = createdBy;
     }
 
     @Override
@@ -51,4 +53,14 @@ public class Todo {
                 "title='" + title + '\'' +
                 '}';
     }
+
+    public User getCreator() {
+        if (users.isEmpty()) {
+            return null;
+        }
+        //by default creator is on the 1st index
+        return users.get(0);
+    }
+
+
 }

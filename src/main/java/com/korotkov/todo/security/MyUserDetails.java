@@ -12,7 +12,7 @@ public record MyUserDetails(User user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(user.getRole().toString()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
     }
 
     @Override
@@ -42,6 +42,6 @@ public record MyUserDetails(User user) implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return !user.isInBan();
+        return !user.getIsInBan();
     }
 }

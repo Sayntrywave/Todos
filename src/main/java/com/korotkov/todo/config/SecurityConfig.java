@@ -37,21 +37,16 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(handlingConfigurer ->{
-                    handlingConfigurer.accessDeniedHandler((request, response, accessDeniedException) -> System.out.println("i'm he"));
-
-                    handlingConfigurer.authenticationEntryPoint(
-                                     (request, response, authException) -> {
-                                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-                                         System.out.println("tyt");
-                                     }
-                    );
-                    }
+                .exceptionHandling(handlingConfigurer ->
+                        handlingConfigurer.authenticationEntryPoint(
+                                (request, response, authException) ->
+                                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage())
+                        )
                 )
 
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/login","/register","/test","/error").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/login", "/register", "/test", "/error").permitAll()
+                        .requestMatchers("/admin/*").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -59,7 +54,6 @@ public class SecurityConfig {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
 
 
     @Bean

@@ -10,8 +10,6 @@ public class UserResponse {
     private int id;
     private String login;
     private String role;
-    private String color;
     @JsonProperty(value = "isInBan")
     private boolean isInBan;
-    //role
 }

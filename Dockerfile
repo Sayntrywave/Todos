@@ -6,4 +6,6 @@ COPY ${JAR_FILE} app.jar
 
 EXPOSE 8080
 
+#ENV .env
+
 ENTRYPOINT ["java", "-jar", "/app.jar"]
