@@ -2,6 +2,7 @@ package com.korotkov.todo.controller;
 
 import com.korotkov.todo.dto.request.AuthenticationRequest;
 import com.korotkov.todo.dto.request.RegistrationRequest;
+import com.korotkov.todo.dto.response.LoginResponse;
 import com.korotkov.todo.model.User;
 import com.korotkov.todo.security.JWTUtil;
 import com.korotkov.todo.service.RegistrationService;
@@ -21,7 +22,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
-import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -48,10 +48,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> registration(@RequestBody @Valid RegistrationRequest user,
-                                                            BindingResult bindingResult) {
+    public ResponseEntity<LoginResponse> registration(@RequestBody @Valid RegistrationRequest user,
+                                                      BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            throw new UserNotCreatedException(bindingResult.getFieldError().getDefaultMessage());
+            throw new UserNotCreatedException(bindingResult.getFieldError().getField() + " " + bindingResult.getFieldError().getDefaultMessage());
         }
 
         registrationService.register(modelMapper.map(user, User.class));
@@ -59,18 +59,13 @@ public class AuthController {
         User currentUser = userService.findByLogin(user.getLogin());
 
         String token = jwtUtil.generateToken(user.getLogin());
-
-
-        return new ResponseEntity<>(Map.of("token", token,
-                "id", String.valueOf(currentUser.getId()),
-                "role", currentUser.getRole(),
-                "login", currentUser.getLogin(),
-                "color", currentUser.getColor()),
-                HttpStatus.OK);
+        LoginResponse map = modelMapper.map(currentUser, LoginResponse.class);
+        map.setToken(token);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid AuthenticationRequest authenticationRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new BadCredentialsException(bindingResult.getFieldError().getDefaultMessage());
         }
@@ -89,13 +84,9 @@ public class AuthController {
         String token = jwtUtil.generateToken(authenticationRequest.getLogin());
 
 
-        //todo make id as int
-        return new ResponseEntity<>(Map.of("token", token,
-                "id", String.valueOf(currentUser.getId()),
-                "role", currentUser.getRole(),
-                "login", currentUser.getLogin(),
-                "color", currentUser.getColor()),
-                HttpStatus.OK);
+        LoginResponse map = modelMapper.map(currentUser, LoginResponse.class);
+        map.setToken(token);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
 

@@ -50,8 +50,8 @@ public class Todo {
     @Override
     public String toString() {
         return "Todo{" +
-                "title='" + title + '\'' +
-                '}';
+               "title='" + title + '\'' +
+               '}';
     }
 
     public User getCreator() {

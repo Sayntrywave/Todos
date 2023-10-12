@@ -15,7 +15,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -206,25 +205,30 @@ public class TodoService {
     public void setUser(Todo todo, String privilege, User from, User to) {
         privilege = privilege.toUpperCase();
         String finalPrivilege = privilege;
-        privilegeRepository.getPrivilegeByName(privilege).ifPresent(role ->
+        privilegeRepository.getPrivilegeByName(privilege).ifPresent(wantedPrivilege ->
                         todoUserRepository.getTodoUserByUserIdAndTodoId(from.getId(), todo.getId()).ifPresent(todoUser -> {
                             Privilege privilege1 = todoUser.getPrivilege();
-                            if (Privilege.canSetPrivilege(privilege1, role)) {
+                            if (Privilege.canSetPrivilege(privilege1, wantedPrivilege)) {
                                 if (finalPrivilege.equals("NONE")) {
                                     todoUserRepository.deleteByUserId(to.getId());
                                 } else {
 
-                                    if (todoRequestRepository.existsByUserIdAndTodoId(to.getId(), todo.getId())) {
-                                        throw new BadCredentialsException("can't create request, bc user has one with this todo");
+                                    Optional<TodoRequest> todoRequest1 = todoRequestRepository.getTodoRequestByUserIdAndTodoId(to.getId(), todo.getId());
+                                    if (todoRequest1.isPresent()) {
+                                        TodoRequest entity = todoRequest1.get();
+                                        entity.setPrivilege(wantedPrivilege);
+                                        todoRequestRepository.save(entity);
+                                        return;
+//                                        throw new BadCredentialsException("can't create request, bc user has one with this todo");
                                     }
                                     Optional<TodoUser> tu = todoUserRepository.getTodoUserByUserIdAndTodoId(to.getId(), todo.getId());
                                     if (tu.isPresent()) {
                                         TodoUser todoUser2 = tu.get();
-                                        todoUser2.setPrivilege(role);
+                                        todoUser2.setPrivilege(wantedPrivilege);
                                         todoUserRepository.save(todoUser2);
                                         cacheManager.getCache("todos").evict(new SimpleKey());
                                     } else {
-                                        TodoRequest todoRequest = new TodoRequest(todo, to, role);
+                                        TodoRequest todoRequest = new TodoRequest(todo, to, wantedPrivilege, from);
                                         todoRequestRepository.save(todoRequest);
                                     }
 //                            cacheManager.getCache("todos").evict(new SimpleKey());
@@ -237,7 +241,7 @@ public class TodoService {
 
     private boolean isAllFieldsNull(Todo todo) {
         return todo.getIsCompleted() == null && todo.getTitle() == null && todo.getDescription() == null &&
-                todo.getTimeSpent() == null;
+               todo.getTimeSpent() == null;
     }
 
 

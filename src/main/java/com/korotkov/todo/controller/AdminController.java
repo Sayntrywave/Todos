@@ -89,7 +89,6 @@ public class AdminController {
         }
         User currentUser = userService.getCurrentUser();
 
-        //todo modify it pls
         User map = modelMapper.map(userEditRequest, User.class);
         if (userEditRequest.getRole() != null) {
             Role roleByName = roleRepository.getRoleByName(userEditRequest.getRole())

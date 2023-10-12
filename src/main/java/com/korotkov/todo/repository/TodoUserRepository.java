@@ -23,13 +23,11 @@ public interface TodoUserRepository extends JpaRepository<TodoUser, Integer> {
     Page<TodoUser> getTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(int id, String title, Pageable pageable);
 
 
-
     boolean existsByUserIdAndTodoId(int userId, int todoId);
 
     long countTodoUsersByUserId(int id);
 
     long countTodoUsersByUserIdAndTodo_TitleIgnoreCaseContains(int id, String title);
-
 
 
     void deleteByUserId(int id);

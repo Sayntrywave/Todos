@@ -4,7 +4,6 @@ import com.korotkov.todo.model.Role;
 import com.korotkov.todo.model.TodoRequest;
 import com.korotkov.todo.model.TodoUser;
 import com.korotkov.todo.model.User;
-import com.korotkov.todo.repository.RoleRepository;
 import com.korotkov.todo.repository.TodoRequestRepository;
 import com.korotkov.todo.repository.TodoUserRepository;
 import com.korotkov.todo.repository.UserRepository;
@@ -132,6 +131,7 @@ public class UserService {
     public List<TodoRequest> getTodoRequests(User user) {
         return todoRequestRepository.getTodoRequestByUserId(user.getId());
     }
+
     public User getById(int id) {
         if (userRepository.existsById(id)) {
             return userRepository.getReferenceById(id);

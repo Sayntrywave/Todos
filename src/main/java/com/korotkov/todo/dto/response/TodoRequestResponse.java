@@ -9,14 +9,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TodoRequestResponse {
 
-    int todoId;
-    String todoTitle;
-    String userPrivilege;
+    private String userLogin;
+    private int todoId;
+    private String todoTitle;
+    private String userPrivilege;
 
     public TodoRequestResponse(TodoRequest request) {
         this.todoId = request.getTodo().getId();
         this.todoTitle = request.getTodo().getTitle();
-//        this.userLogin = request.getUser().getLogin();
+        this.userLogin = request.getUserBy().getLogin();
 
         this.userPrivilege = request.getPrivilege().getName();
     }

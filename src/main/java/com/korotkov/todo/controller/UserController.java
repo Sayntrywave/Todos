@@ -4,7 +4,10 @@ package com.korotkov.todo.controller;
 import com.korotkov.todo.dto.request.AcceptRequest;
 import com.korotkov.todo.dto.request.TodoRequestDTO;
 import com.korotkov.todo.dto.request.TodoUserRequest;
-import com.korotkov.todo.dto.response.*;
+import com.korotkov.todo.dto.response.TodoRequestResponse;
+import com.korotkov.todo.dto.response.TodoResponse;
+import com.korotkov.todo.dto.response.UserResponse;
+import com.korotkov.todo.dto.response.UserTodo;
 import com.korotkov.todo.model.Todo;
 import com.korotkov.todo.model.TodoRequest;
 import com.korotkov.todo.model.TodoUser;
@@ -50,8 +53,8 @@ public class UserController {
 
 
     @GetMapping("/me")
-    public LoginResponse getInfo() {
-        LoginResponse map = modelMapper.map(userService.getCurrentUser(), LoginResponse.class);
+    public UserResponse getInfo() {
+        UserResponse map = modelMapper.map(userService.getCurrentUser(), UserResponse.class);
         return map;
     }
 
