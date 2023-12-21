@@ -7,7 +7,6 @@ https://app.swaggerhub.com/apis-docs/SAYNTRYWAVE_1/todo-api/2.0.0-oas3#/
  - Spring Security (JWT)
  - Spring Data
  - Spring MVC
- - Hibernate
  - PostgreSQL
  - Docker
 
